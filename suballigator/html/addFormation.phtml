@@ -1,0 +1,89 @@
+<?php
+include_once('../php/util/notifs.php');
+?>
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="https://cdn.jsdelivr.net/npm/daisyui@2.31.0/dist/full.css" rel="stylesheet" type="text/css" />
+	<link rel="stylesheet" href="../loader/loader.css">
+	<script src="https://cdn.tailwindcss.com"></script>
+	<script src="../js/tailwind.config.js"></script>
+	<link rel="icon" type="image/png" href="../assets/suballigators_logo.png" />
+	<title>Accueil</title>
+</head>
+
+<body>
+
+	<?php
+	include_once('navbar.phtml');
+	include "../php/util/conn.php";
+	include "../php/util/pdo_oracle.php";
+	
+	if(!isset($_POST["submit"]) ){
+		LireDonneesPDO1($mysqlConnection,"select distinct levelid,levelname from Level where leveldeleted!=1",$levels);
+		
+		
+		echo'<form method="post">
+		
+		Nom du groupe :<input class="input input-bordered w-full max-w-xs" name="formationname" type="text" placeholder="Nom du groupe"><br>
+		Niveau du groupe :
+		<select class="input input-bordered w-full max-w-xs" name="level" >';
+		foreach($levels as $level){
+			echo'<option  value="'.$level["levelid"].'">'.$level["levelname"].'</option>';
+			
+		
+			
+				
+			
+		}
+		echo'</select><br>';
+		LireDonneesPDO1($mysqlConnection,"select initiatorname,initiatorid,levelid from Initiator where initiatordeleted!=1",$initiators);
+	
+		
+		echo'
+			
+			Initiateur responsable de formation :
+			<select class="input input-bordered w-full max-w-xs" name="init" >';
+			
+		foreach($initiators as $init){
+			echo'<option  value="'.$init["initiatorid"].'">'.$init["initiatorname"]." - Level ".$init["levelid"].'</option>';
+		
+		}
+		echo'</select><br>';
+		echo'<input class="btn btn-primary" type="submit" name="submit" value="Valider"></form></select>';
+	}
+	
+	if(isset($_POST["submit"])){
+		$level= $_POST["level"];
+		
+		
+		LireDonneesPDO1($mysqlConnection,"select max(formationid) as id from Formation",$formid);
+		
+		$formationid=intval($formid[0]["id"])+1;
+		$insert ="insert into Formation(formationid, formationname, levelid) values ($formationid,".'"Level '.$level.' - Groupe '.$_POST["formationname"].'",'.$level.')';
+		majDonneesPDO($mysqlConnection,$insert);
+		
+	
+		LireDonneesPDO1($mysqlConnection,"select max(trainingmanagerid) as max from TrainingManager",$managerid);
+		$manaid=$managerid[0]["max"];
+		$initid=intval($_POST["init"]);
+		$insertinitiator="insert into TrainingManager(trainingmanagerid,initiatorid,formationid) values($manaid,$initid,$formationid)";
+		majDonneesPDO($mysqlConnection,$insertinitiator);
+		
+		
+		
+		
+	}
+	
+	
+	include_once('footer.phtml');
+
+	?>
+</body>
+
+
+

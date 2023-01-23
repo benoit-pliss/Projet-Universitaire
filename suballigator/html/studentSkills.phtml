@@ -1,0 +1,151 @@
+<?php
+include_once('../php/util/notifs.php');
+?>
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@2.31.0/dist/full.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="../loader/loader.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../js/tailwind.config.js"></script>
+    <link rel="icon" type="image/png" href="../assets/suballigators_logo.png" />
+    <title>Synthèse d'élève</title>
+</head>
+
+<body>
+    <?php
+    include_once('navbar.phtml');
+    ?>
+    <div class="flex flex-col justify-center items-center overflow-x-auto">
+        <table id="etudiant" class="table table-striped">
+            <tr>
+                <th>Nom des étudiants</th>
+
+                <?php
+
+                include '../php/util/conn.php';
+                include '../php/util/pdo_oracle.php';
+
+                if (!isset($_SESSION)) {
+                    echo "<meta http-equiv='refresh' content='0;url=accueil.phtml'>";
+                    die();
+                    exit();
+                }
+
+                $sql = "SELECT levelid FROM Level where leveldeleted !=1";
+
+
+                LireDonneesPDO1($mysqlConnection, $sql, $nbLevel);
+
+
+
+                for ($i = 1; $i <= count($nbLevel); $i++) {
+                    echo '<th style="writing-mode: vertical-rl;text-orientation: mixed;">niveau' . $i . ':</th>';
+
+                    $sql = "SELECT skillname FROM Skill where levelid = $i and skilldeleted !=1 order by skillid";
+
+                    $lvl = array();
+                    LireDonneesPDO1($mysqlConnection, $sql, $lvl);
+
+                    foreach ($lvl as $a) {
+                        echo '<th style="writing-mode: vertical-rl;text-orientation: mixed;">';
+                        echo $a['skillname'];
+                        echo '</th>';
+                    }
+                }
+                ?>
+            </tr>
+
+            <?php
+            $sql = "SELECT upper(studentname), studentid FROM Student where studentdeleted !=1 order by studentname";
+
+            LireDonneesPDO1($mysqlConnection, $sql, $allstu);
+
+            foreach ($allstu as $stu) {
+
+                echo '<tr>';
+                echo '<td>';
+                echo '<label for="my-modal-4" class="btn btn-sm" onclick="location.href=\'https://dev-sae301grp1.users.info.unicaen.fr/romaindev/html/displayAllStudentApt.phtml?studentid=' . $stu['studentid'] . '\'">';
+                echo $stu['upper(studentname)'];
+                echo '</label>';
+                echo '</td>';
+                for ($i = 1; $i <= count($nbLevel); $i++) {
+
+                    echo '<td></td>';
+                    $sql = "SELECT skillid from Skill where skilldeleted !=1 and levelid = " . $i . " order by skillid";
+
+                    $skill = array();
+
+                    LireDonneesPDO1($mysqlConnection, $sql, $skill);
+
+
+
+                    foreach ($skill as $key) {
+
+                        echo '<td>';
+
+                        $sql = "SELECT count(aptitudeId) from Skill left join Aptitude using (skillId) where skillid =" . $key['skillid'] . " and skilldeleted !=1 and aptitudedeleted = 0 group by skillId order by levelid, skillid";
+
+                        $nbAptSkill1 = array();
+                        LireDonneesPDO1($mysqlConnection, $sql, $nbAptSkill1);
+
+
+                        $sql = "SELECT Aptitudeid from Aptitude join Skill using (skillid) where skillid =" . $key['skillid'] . " and skilldeleted !=1 and aptitudedeleted!=1 order by Aptitudeid";
+
+                        $aptskill = array();
+                        LireDonneesPDO1($mysqlConnection, $sql, $aptskill);
+
+
+                        $nb_apt_acquis = 0;
+
+
+                        for ($j = 0; $j < count($aptskill); $j++) {
+                            $apt_acquis = 0;
+                            $sql = "SELECT Aptitudeid, Statusname, studentName from Student join Participation using(studentId) join Status using(Statusid) join Content using(Contentid) join Aptitude using(Aptitudeid) join Session USING (sessionid) where (Statusid = 3 or statusid = 4) and studentid =" . $stu['studentid'] . " and Aptitudeid = " . $aptskill[$j]['Aptitudeid'] . " order by Sessiondate desc limit 3";
+
+                            $apt = array();
+                            LireDonneesPDO1($mysqlConnection, $sql, $apt);
+
+
+                            for ($k = 0; $k < count($apt); $k++) {
+                                if ($apt[$k]['Statusname'] == 'Acquis') {
+                                    $apt_acquis++;
+                                }
+                            }
+                            if ($apt_acquis == 3) {
+                                $nb_apt_acquis++;
+                            }
+                        }
+                        if (isset($nbAptSkill1[0]['count(aptitudeId)']) && $nb_apt_acquis == $nbAptSkill1[0]['count(aptitudeId)']) {
+
+
+                            echo '✅';
+
+                        } else if (!isset($nbAptSkill1[0]['count(aptitudeId)'])) {
+                            echo '✅';
+                        } else {
+
+
+                            echo '❌';
+
+                        }
+
+                        echo '</td>';
+                    }
+                }
+                echo '</tr>';
+            }
+
+
+
+            echo '</table>';
+            echo '</div>';
+            include_once("footer.phtml");
+            ?>
+</body>
+
+</html>

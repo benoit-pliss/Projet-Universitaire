@@ -1,0 +1,217 @@
+<?php
+include_once('../php/util/notifs.php');
+//Check if the session already exists and if it doesnt exist, it creates a new one.
+if (isset($_SESSION) && $_SESSION['initiatorIsDirector'] == 0) {      
+	echo "<meta http-equiv='refresh' content='0;url=accueil.phtml'>";
+    die();
+} else if (!isset($_SESSION)){
+	echo "<meta http-equiv='refresh' content='0;url=accueil.phtml'>";
+    die();
+}
+?>
+<?php 
+	
+	if(isset($_POST["error"]) && $_POST["error"] == 1){
+		$bool = true;
+	}
+	else{
+		$bool = false;
+	}
+
+	
+	include '../php/util/conn.php';
+    include '../php/util/pdo_oracle.php';
+	
+	$erreur = true;
+	//Allow us to have everything on the same page.
+	echo"<form name='form_retour' action='Ajout_Initiateur.php' method='post'>";
+
+	if(isset($_POST["env"])){
+		$erreur = false;
+
+		//Check if the user has entered a name in the text field, and if he didnt, returns an error message
+		if(!empty($_POST["nom_ini"])){
+			$nom_ini = $_POST["nom_ini"];
+			echo "<input type='hidden' id='nom_ini' name='nom_ini' value='$nom_ini'>";
+		}
+		else{
+			echo "erreur manque le nom de l'initiateur</br>";
+			$erreur = true;
+		}
+		
+		//Check if the user has entered an email in the text field, and if he didnt, returns an error message
+		if(!empty($_POST["email_ini"])){
+			$email_ini = $_POST["email_ini"];
+			echo "<input type='hidden' id='email_ini' name='email_ini' value='$email_ini'>";
+		}
+		else{
+			echo "erreur manque l'email de l'initiateur ou email non conforme</br>";
+			$erreur = true;
+		}
+		
+		//Check if the user has entered a password in the text field, and if he didnt, returns an error message
+		if(!empty($_POST["mdp_ini"])){
+			$mdp_ini = $_POST["mdp_ini"];
+			echo "<input type='hidden' id='mdp_ini' name='mdp_ini' value='$mdp_ini'>";
+		}
+		else{
+			echo "erreur manque le mot de passe de l'initiateur</br>";
+			$erreur = true;
+		}
+
+
+		//Check if the user has choosed a role or not, and if he didnt, returns an error message
+		if(!isset($_POST["role"])) {
+			echo "Il faut choisir entre Directeur Technique et Responsable de Formation !<br>";
+			$erreur = true;
+		}
+
+
+		//Test if the user already exists in the database or not, and if it does, returns an error message
+		if($erreur == false){
+
+			$req = "SELECT count(*) as count from Initiator where initiatorEmail ='".$email_ini."'";
+			//echo $req;
+
+			
+			$nbLignes = LireDonneesPDO1($mysqlConnection,$req,$tab);
+			//print_r($tab);
+			
+
+			if($tab[0]['count'] != 0){
+				$erreur = true;
+				echo "erreur l'initiateur est déjà présent dans la base !</br>";
+			}
+		}
+
+		//Now that we have checked everything, we can insert what the user has choosed into the database
+		if($erreur == false){
+
+			$req_id = "SELECT MAX(initiatorId) + 1 as max_id from Initiator";
+			$res = LireDonneesPDO1($mysqlConnection,$req_id,$tab1);
+
+			$req_niv = "SELECT LevelId as id_level from Level where LevelName = '".$_POST["niv_ini"]."'";
+			//echo $req_niv;
+			$res_niv = LireDonneesPDO1($mysqlConnection, $req_niv,$tab2);
+			$default_is_director = 0;
+
+
+			if(isset($_POST["role"]) && $_POST["role"] == "Directeur") {
+				$default_is_director = 1;
+			}
+
+			$req = "INSERT INTO Initiator values ('".$tab1[0]['max_id']."', '".$nom_ini."', '".$email_ini."', '".$mdp_ini."', 0, '".$default_is_director."', '".$tab2[0]['id_level']."')";
+			//echo $req;
+
+
+
+			$cur = PreparerRequetePDO($mysqlConnection,$req);
+			$res = LireDonneesPDO1($mysqlConnection,$req,$cur);
+
+
+			
+			echo "<input type='hidden' id='error' name='error' value='0'>L'initiateur est bien inséré !";
+		}
+	}
+	if ($erreur == true){
+		
+		echo "<input type='hidden' id='error' name='error' value='1'>";
+	}
+	
+?>
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@2.31.0/dist/full.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="../loader/loader.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../js/tailwind.config.js"></script>
+    <link rel="icon" type="image/png" href="../assets/suballigators_logo.png" />
+    <title>Création d'un compte initiateur</title>
+</head>
+
+<body>
+	<?php
+    include_once('navbar.phtml');
+    ?>
+	<div class="my-16  text-5xl font-bold text-center">
+		<h2>Création d'un compte initiateur<hr></h2>
+	</div>
+  	
+  	<form name="form_ajout_annee" action="" method="post" onsubmit="return confirm('Voulez vous vraiment insérer cette initiateur ?');">
+		<label for='nom_ini'>Prénom de l'initiateur :</label><input class="input input-bordered w-full max-w-xs" type="text" name="nom_ini" id="nom_ini" 
+		value="" size="16"><br>
+		<br>
+		<label for='email_ini'>Email de l'initiateur : </label><input class="input input-bordered w-full max-w-xs" type="text" name="email_ini" id="email_ini" 
+		value="" size="16"><br>
+		<br>
+		<label for='mdp_ini'>Mot de passe de l'initiateur : </label><input class="input input-bordered w-full max-w-xs" type="password" name="mdp_ini" id="mdp_ini" 
+		value="" size="16"><br>
+		<br>
+		<label for='niv_ini'>Niveau de l'Initiateur : </label>
+		<select class="input input-bordered w-full max-w-xs" name="niv_ini" id="niv_ini" value="" >
+			<?php 
+
+				//Creates a dropdown list that has every Level that are in the database
+				$req = "SELECT LevelName from Level where LevelDeleted = 0";
+				$nbLignes = LireDonneesPDO1($mysqlConnection,$req,$tab);
+				for ($i = 0; $i < $nbLignes; $i++){ 
+					echo "<tr>\n";
+					foreach ($tab[$i] as $key => $val){ 
+						echo "<option>$val</option>\n";
+				}
+				echo "</tr>\n";
+				}
+				//AfficherDonnee($tab, $res);
+			
+			?>
+		</select><br>
+		<br>
+		<div>
+			<label for="directeur">Directeur Technique</label>
+			<input type="radio" id="directeur" name="role" value="Directeur">
+			&nbsp;
+			&nbsp;
+			<label for="responsable">Responsable de Formation</label>
+			<input type="radio" id="responsable" name="role" value="Responsable">
+		</div>
+		<br>
+		<input class="btn btn-primary" type="submit" name="env" value="Insérer">
+	</form>
+	
+	<div>
+	<?php 
+	
+	$initQuery = "SELECT initiatorName from Initiator order by initiatorId";
+	$lineCount = ReadData1($mysqlConnection, $initQuery, $arr);
+	
+	echo "<table>";
+	echo "<thead>";
+	echo "<th>Liste des initiateurs</th>";
+	echo "</thead>";
+	
+	for($i = 0; $i < $lineCount; $i++) {
+		
+		echo "<tr>";
+				echo "<td>";
+
+		echo $arr[$i]['initiatorName'];
+		
+				echo "</td>";
+
+		echo "</tr>"; 
+		
+		
+		
+	}
+	echo "</table>";
+	
+	?>
+	</div>
+	<?php include_once("footer.phtml"); ?> 
+  </body>
+</html>

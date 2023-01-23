@@ -1,0 +1,43 @@
+<?php
+include_once('../php/util/notifs.php');
+?>
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@2.31.0/dist/full.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="../loader/loader.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../js/tailwind.config.js"></script>
+    <link rel="icon" type="image/png" href="../assets/suballigators_logo.png" />
+    <title>Accueil</title>
+</head>
+
+<body>
+
+    <?php
+    include_once('navbar.phtml');
+    ?>
+
+    <div class="my-16  text-5xl font-bold text-center">
+        <h1>Accueil</h1>
+    </div>
+
+    <div class="flex items-center justify-center">
+        <div class="grid grid-cols-2 gap-4">
+            <?php
+            include_once('../php/informations/acceuilFormations.php');
+            ?>
+        </div>
+    </div>
+
+    <?php
+    include_once('footer.phtml');
+    ?>
+
+</body>
+
+</html>

@@ -1,0 +1,107 @@
+<div class="my-16  text-lg font-bold text-center">
+    <h2 class="centrer">Definir des aptitudes pour la formation : </br><?php
+                                                                        $sql = "SELECT formationname FROM Formation join Session using(formationid) where sessionid = " . $_GET['session'];
+
+                                                                        $arr = array();
+                                                                        $n = LireDonneesPDO1($mysqlConnection, $sql, $arr);
+                                                                        echo $arr[0]['formationname'] . ' ';
+                                                                        ?>
+        le <?php
+            $sql = "SELECT sessiondate FROM Session where sessionid = " . $_GET['session'];
+            $arr = array();
+            $n = LireDonneesPDO1($mysqlConnection, $sql, $arr);
+
+            // rewrite the date
+            $date_all = explode(' ', $arr[0]['sessiondate']);
+            $date = explode('-', $date_all[0]);
+            $day = explode(':', $date_all[1]);
+            echo $date[2] . '/' . $date[1] . '/' . $date[0] . ' à ' . $day[0] . 'h' . $day[1];
+            ?>
+    </h2>
+</div>
+
+<form name="form" action="<?php $_SERVER['PHP_SELF'] ?>" method="post">
+    <div class="flex flex-row justify-center items-center gap-x-1">
+        <button type="submit" name="retour" class="btn btn-secondary">Retour</button>
+        <button type="submit" name="BtSub" class="btn btn-accent">Valider</button>
+    </div>
+    <div class="lesInputs">
+
+        <?php
+        $sql10 = "SELECT levelid FROM Level join Formation using(levelid)  join Session using(formationid) where sessionid = " . $_GET['session'];
+        LireDonneesPDO1($mysqlConnection, $sql10, $arr10);
+        $sql = "SELECT aptitudeid, aptitudename FROM Aptitude join Skill using (skillid) where aptitudedeleted = 0 and levelid=".$arr10[0]['levelid']." ORDER BY aptitudeid";
+
+
+        LireDonneesPDO1($mysqlConnection, $sql, $arr2);
+
+        // display the aptitudes
+        function displayAptitude($arr, $lineCount, $mysqlConnection)
+        {
+
+
+            if ($lineCount > 0) {
+                echo '<div class="flex flex-col justify-center items-center overflow-x-auto mt-16">
+		                <table name="eleves" class="table table-striped">
+			                <thead>
+				                <tr>
+					                <th>Compétences</th>
+                                    <th>Aptitudes</th>
+                                    <th>Selectionner</th>
+				                </tr>
+                            </thead>
+			                <tbody>';
+
+                $skillname = "";
+
+                // display the aptitudes
+                for ($i = 0; $i < $lineCount; $i++) {
+                    echo '<tr>';
+                    $sql = "SELECT skillname FROM Skill join Aptitude using(skillid) where aptitudeid = " . $arr[$i]['aptitudeid'];
+                    $arr6 = array();
+                    $n = LireDonneesPDO1($mysqlConnection, $sql, $arr6);
+                    if ($skillname == "" or $skillname != $arr6[0]['skillname']) {
+                        $skillname = $arr6[0]['skillname'];
+                        echo '<tr class="hover"><td>' . $skillname . '</td>';
+                    } else {
+                        echo '<td></td>';
+                    }
+                    $j = 0;
+                    foreach ($arr[$i] as $data) {
+                        if ($j > 0)
+                            echo "<td>$data</td>";
+                        $j = 1;
+                    }
+                    $sql = "SELECT count(*) as COUNT from Content join Session using(sessionid) where sessionid =" . $_GET['session'] . " and aptitudeid=" . $arr[$i]['aptitudeid'];
+                    $arr3 = array();
+                    $n = LireDonneesPDO1($mysqlConnection, $sql, $arr3);
+                    if ($arr3[0]['COUNT'] > 0) { // if the aptitude is already in the session
+                        echo "<td><div class='form-control'>
+                                    <label class='cursor-pointer label'>
+                                    <input type='checkbox' name='" . $arr[$i]['aptitudeid'] . "' value='" . $arr[$i]['aptitudeid'] . "' checked class='checkbox checkbox-success'/>
+                                    </label>
+                                </div></td>";
+                    } else {
+                        echo "<td><div class='form-control'>
+                        <label class='cursor-pointer label'>
+                        <input type='checkbox' name='" . $arr[$i]['aptitudeid'] . "' value='" . $arr[$i]['aptitudeid'] . "' class='checkbox checkbox-success' />
+                        </label>
+                    </div></td>";
+                    }
+
+                    echo "</tr>";
+                }
+                echo "</tbody></table></div>";
+            } else {
+                echo "Pas de ligne<br />\n";
+            }
+        }
+        displayAptitude($arr2, count($arr2), $mysqlConnection);
+
+        ?>
+    </div>
+    <div class="flex flex-row justify-center items-center gap-x-1">
+        <button type="submit" name="retour" class="btn btn-secondary">Retour</button>
+        <button type="submit" name="BtSub" class="btn btn-accent">Valider</button>
+    </div>
+</form>

@@ -1,0 +1,148 @@
+<?php
+// include files for additional functionality and styles
+include_once('../loader/loader.php');
+include_once('../php/auth/authorizationStrategie.php');
+?>
+<div class="drawer">
+    <input id="my-drawer" type="checkbox" class="drawer-toggle" />
+    <div class="drawer-content">
+        <!-- Page content here -->
+
+        <div class="navbar bg-base-100">
+            <div class="navbar-start">
+
+                <label for="my-drawer" class="btn btn-primary drawer-button"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
+                    </svg>Menu</label>
+                <!-- <div class="dropdown">
+                <label tabindex="0" class="btn btn-ghost btn-circle">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
+                    </svg>
+                </label>
+                <ul tabindex="0" class="menu menu-compact dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-64">
+                    <?php
+                    //     $authorization = new AuthorizationStrategie();
+                    //     $session = array("initiatorIsDirector" => 1, "isFormationDirector" => 0);
+                    //     $authorizedPages = $authorization->authorizedPages($session);
+                    //     foreach ($authorizedPages as $page) {
+                    //         echo '<li class="menu-item w-auto my-1">
+                    //     <a href="' . $page["URL"] . '" class="btn btn-ghost btn-block">' . $page["NOM"] . '</a>
+                    // </li>';
+                    //     }
+                    ?>
+                </ul>
+            </div> -->
+            </div>
+            <div class="navbar-center">
+                <a class="btn btn-ghost normal-case text-xl" href="accueil.phtml"><img class="h-12" src="../assets/suballigators_logo.png"></a>
+            </div>
+            <div class="navbar-end">
+                <div title="Change Theme" class="dropdown dropdown-end ">
+                    <div tabindex="0" class="btn gap-1 normal-case btn-ghost" spellcheck="false"><svg width="20" height="20" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block h-5 w-5 stroke-current md:h-6 md:w-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path>
+                        </svg> <span class="md:inline">Theme</span> <svg width="12px" height="12px" class="ml-1 h-3 w-3 fill-current opacity-60 sm:inline-block" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2048 2048">
+                            <path d="M1799 349l242 241-1017 1017L7 590l242-241 775 775 775-775z"></path>
+                        </svg>
+                    </div>
+                    <div class="dropdown-content bg-base-200 text-base-content rounded-t-box rounded-b-box top-px max-h-96 h-[70vh] w-52 overflow-y-auto shadow-2xl mt-16">
+                        <div class="grid grid-cols-1 gap-3 p-3" tabindex="0" spellcheck="false">
+                            <label class="label">
+                                <span class="label-text">Theme</span>
+                            </label>
+                            <?php $list = array("light", "dark", "cupcake", "bumblebee", "emerald", "corporate", "synthwave", "retro", "valentine", "halloween", "garden", "forest", "aqua", "lofi", "pastel", "fantasy", "wireframe", "black", "luxury", "dracula", "cmyk", "autumn", "business", "acid", "lemonade", "night", "coffee", "winter");
+                            foreach ($list as $value) {
+                                echo '<div class="outline-base-content overflow-hidden rounded-lg outline-2 outline-offset-2 post-name';
+                                if (isset($_SESSION["themeSet"]) && $_SESSION["themeSet"] == $value) {
+                                    echo ' outline';
+                                } elseif ((!isset($_SESSION["themeSet"])) && $value == "light") {
+                                    echo ' outline';
+                                }
+                                echo '" data-name="' . $value . '">
+                                    <div data-theme="' . $value . '" class="bg-base-100 text-base-content w-full cursor-pointer font-sans">
+                                        <div class="grid grid-cols-5 grid-rows-3">
+                                            <div class="col-span-5 row-span-3 row-start-1 flex gap-1 py-3 px-4">
+                                                <div class="flex-grow text-sm font-bold">' . ucfirst($value)  . '</div>
+                                                <div class="flex flex-shrink-0 flex-wrap gap-1">
+                                                    <div class="bg-primary w-2 rounded"></div>
+                                                    <div class="bg-secondary w-2 rounded"></div>
+                                                    <div class="bg-accent w-2 rounded"></div>
+                                                    <div class="bg-neutral w-2 rounded"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>';
+                            }
+
+                            ?>
+                        </div>
+                    </div>
+                </div>
+
+                <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+                <script>
+                    $(document).ready(function() {
+                        $('.post-name').click(function() {
+                            var name = $(this).data('name');
+
+                            document.getElementsByTagName("html")[0].setAttribute("data-theme", name);
+                            $('.post-name').removeClass('outline');
+                            $(this).addClass('outline');
+                            $.ajax({
+                                url: "../php/util/set_theme.php",
+                                data: {
+                                    themeSet: name
+                                }
+                            });
+                        });
+                    });
+                </script>
+
+                <?php
+                if (isset($_SESSION["themeSet"])) {
+                    echo '<script>document.getElementsByTagName("html")[0].setAttribute("data-theme", "' . $_SESSION["themeSet"] . '");</script>';
+                }
+                ?>
+
+                </form>
+                <div class="dropdown dropdown-end">
+                    <div tabindex="0" class="btn btn-ghost btn-circle avatar <?php if (isset($_SESSION["initiatorId"])) {
+                                                                                    echo 'online';
+                                                                                } else {
+                                                                                    echo 'offline';
+                                                                                } ?>">
+                        <div class="w-10 rounded-full">
+                            <img src="../assets/pp.png" />
+                        </div>
+                    </div>
+                    <ul tabindex="0" class="menu menu-compact dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-52">
+                        <li>
+                            <?php if (isset($_SESSION["initiatorId"])) {
+                                echo "<p class='justify-between'>
+                        Profil";
+                            } else {
+                                echo "<p class='justify-between'>
+                        Profil";
+                            } ?>
+
+                            <span class="badge"><?php if (isset($_SESSION["initiatorId"])) {
+                                                    echo $_SESSION["initiatorName"];
+                                                } else {
+                                                    echo 'Visiteur';
+                                                } ?></span>
+                            </a>
+                        </li>
+                        <li><?php if (isset($_SESSION["initiatorId"])) {
+                                echo '<a href="../php/auth/logout.php">Se déconnecter</a>';
+                            } else {
+                                echo '<a href="../index.php">Se connecter</a>';
+                            } ?></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-center bg-[#041F26]">
+            <img class="h-32 animate-wiggle" id="navImg" src="../assets/scuba.gif" alt="tour-de-france-gif">
+        </div>

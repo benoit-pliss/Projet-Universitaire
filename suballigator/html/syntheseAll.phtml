@@ -1,0 +1,116 @@
+<?php
+include_once('../php/util/notifs.php');
+if(!isset($_SESSION)){
+    echo "<meta http-equiv='refresh' content='0;url=accueil.phtml'>";
+    die();
+    exit();
+} else if(isset($_SESSION) && ($_SESSION['initiatorIsDirector'] == 0 && $_SESSION['initiatorIsManager'] == 0)){
+    echo "<meta http-equiv='refresh' content='0;url=accueil.phtml'>";
+    die();
+    exit();
+}
+?>
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@2.31.0/dist/full.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="../loader/loader.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../js/tailwind.config.js"></script>
+    <link rel="icon" type="image/png" href="../assets/suballigators_logo.png" />
+    <title>Synthèse</title>
+</head>
+
+<body>
+    <?php
+    // include files for navigation bar and database connection
+    include_once('navbar.phtml');
+    include_once('../php/util/pdo_oracle.php');
+    include_once("../php/informations/syntheseAll.php");
+    // check if user has permission to view the page
+    if (authorizeUser(1) == 0) {
+        addNotif("error", "Accès non autorisé", "Vous n'avez pas les droits nécessaires pour acceder à cette page. Retour à la page précédente dans 5 secondes...");
+        afficherNotifs();
+        echo '<script>
+        setTimeout(
+            function(){
+                window.history.back();
+            }, 5000);
+            </script>';
+        return;
+    }
+    // get all formations
+    $formations = getFormations();
+
+
+    afficherNotifs();
+    ?>
+
+    <div class="my-16  text-5xl font-bold text-center">
+        <h1>Synthèse des aptitudes et compétences</h1>
+    </div>
+
+    <div class="flex justify-center items-center flex-col">
+
+        <!-- Formation select -->
+        <form action="" class="flex form-control w-full max-w-xs">
+            <label class="label">
+                <span class="label-text">Séléctionnez la formation</span>
+            </label>
+            <select class="select select-accent max-w-xs shadow-lg shadow-current" name="formationSelect">
+                <?php
+                foreach ($formations as $formation)
+                    echo "<option value='" . $formation["formationId"] . "'>" . $formation["formationName"] . "</option>";
+                ?>
+            </select>
+        </form>
+
+        <!-- Table of students syntheses -->
+        <div class="flex flex-col justify-center items-center overflow-x-auto mt-16">
+            <table class="table table-striped table-bordered table-condensed">
+                <thead>
+                    <tr>
+                        <th>Élèves</th>
+                        <th>Compétences</th>
+                    </tr>
+                </thead>
+                <tbody name="students">
+                    <tr class="hover">
+                        <td>Eleve Name</td>
+                        <td>
+                            <div tabindex="0" class="collapse collapse-arrow border border-base-300 bg-base-100 rounded-box" style="visibility: visible;">
+                                <div class="collapse-title text-xl font-medium">
+                                    Compétence(s)
+                                </div>
+                                <div class="collapse-content" name="skill">
+                                    <div tabindex="0" class="collapse collapse-arrow border border-base-300 bg-base-100 rounded-box" style="visibility: visible;">
+                                        <div class="collapse-title text-xl font-medium">
+                                            Compétence Name
+                                        </div>
+                                        <div class="collapse-content" name="aptitude">
+                                            <p>Aptitude Name</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <?php
+    include_once('footer.phtml');
+    ?>
+
+    <!-- include script to fill table with students and their syntheses -->
+    <script src="../js/syntheseAllAjax.js"></script>
+
+</body>
+
+</html>

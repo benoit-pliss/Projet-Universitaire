@@ -1,0 +1,125 @@
+<?php
+include_once('../php/util/notifs.php');
+?>
+<!-- @author Mahé -->
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="https://cdn.jsdelivr.net/npm/daisyui@2.31.0/dist/full.css" rel="stylesheet" type="text/css" />
+	<link rel="stylesheet" href="../loader/loader.css">
+	<script src="https://cdn.tailwindcss.com"></script>
+	<script src="../js/tailwind.config.js"></script>
+	<link rel="icon" type="image/png" href="../assets/suballigators_logo.png" />
+	<title>Formations</title>
+</head>
+
+<body>
+
+	<?php
+	include_once('navbar.phtml');
+	?>
+
+	<div class="my-16  text-5xl font-bold text-center">
+		<h1>Formations</h1>
+	</div>
+	<?php
+
+	// Connexion file 
+	include "../php/util/conn.php";
+
+	if (!empty($_GET['formationId'])) {
+
+		$queryFormation = 'SELECT formationName from Formation where formationId =' . $_GET['formationId'] . ';';
+		$lineCountFormation = ReadData1($mysqlConnection, $queryFormation, $arrFormation);
+
+		echo '
+		<div class="my-8  text-2xl font-bold text-center">
+			<h1> ' . $arrFormation[0]["formationName"] . '</h1>
+		</div>';
+
+		// SQL Query : gets all skills and aptitudes from selected formation
+		$query = 'SELECT SkillName as Compétences, AptitudeName as Aptitudes from Formation
+				 join Level using(LevelId)
+				 join Skill using(LevelId)
+				 join Aptitude using(SkillId)
+				 where formationID = ' . $_GET['formationId'] . ' and skillDeleted = 0 and aptitudeDeleted = 0;';
+
+		$lineCount = ReadData1($mysqlConnection, $query, $arr);
+
+		// Call to PrintDataOnce() function - see below
+		PrintDataOnce($arr, $lineCount);
+
+
+	} else {
+		echo 'failure';
+	}
+
+	/* Prints all skills and aptitudes of a formation - prints every skill only once.
+ 					* 
+					* @param array $arr List of skills and aptitudes
+					* @param int $lineCount Lenght of the array
+					*/
+	function PrintDataOnce($arr, $lineCount)
+	{
+		$temp = "";
+
+
+		echo '<div class="flex flex-col justify-center items-center overflow-x-auto mt-16">
+		<table name="eleves" class="table table-striped">
+		<thead>
+                    <tr>
+                        <th>Compétences</th>
+                        <th>Aptitudes</th>
+                    </tr>
+                </thead>
+				<tbody>';
+		if ($lineCount > 0) {
+			
+			foreach ($arr as $i) {
+				if ($temp == $i['Compétences']) {
+					echo '<tr class="hover">';
+
+						echo "<td>" . "" . "</td>";
+						echo "<td>" . $i['Aptitudes'];
+
+					echo "</tr>";
+				} else {
+					$temp = $i['Compétences'];
+					echo '<tr class="active">';
+
+						echo "<td>" . $i['Compétences'] . "</td>";
+						echo "<td>" . $i['Aptitudes'] . "</td>";
+
+					echo "</tr>";
+				}
+			}
+			echo "</tbody></table></div>";
+		}
+	}
+
+	/* Reads the data in a query and place it in an array, and returns the lenght of the array.
+					*
+					* @param $conn - Database connection
+					* @param $query - SQL Query to read
+					* @param $arr - array in which the read data is placed
+					*/
+	function ReadData1($conn, $query, &$arr)
+	{
+		$i = 0;
+		foreach ($conn->query($query, PDO::FETCH_ASSOC) as $line)
+			$arr[$i++] = $line;
+		$lineCount = $i;
+		return $lineCount;
+	}
+
+	include("footer.phtml");
+	?>
+
+
+</body>
+
+</html>

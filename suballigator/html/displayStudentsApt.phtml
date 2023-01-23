@@ -1,0 +1,59 @@
+<?php
+include_once('../php/util/notifs.php');
+if(!isset($_SESSION)){
+    echo "<meta http-equiv='refresh' content='0;url=accueil.phtml'>";
+    die();
+    exit();
+} else if(isset($_SESSION) && ($_SESSION['initiatorIsDirector'] == 0 && $_SESSION['initiatorIsManager'] == 0)){
+    echo "<meta http-equiv='refresh' content='0;url=accueil.phtml'>";
+    die();
+    exit();
+}
+?>
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@2.31.0/dist/full.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="../loader/loader.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../js/tailwind.config.js"></script>
+    <link rel="icon" type="image/png" href="../assets/suballigators_logo.png" />
+    <title></title>
+</head>
+
+<body>
+
+    <?php
+    include_once('navbar.phtml');
+    ?>
+    
+    <div class="my-16  text-5xl font-bold text-center">
+        <h1>Choisissez un élève</h1>
+    </div>
+    <?php
+    include '../php/util/conn.php';
+    include '../php/util/pdo_oracle.php';
+
+    if ($_SESSION['initiatorIsDirector'] == 1)
+        $sql = "SELECT studentname,studentid FROM Student join Formation using(formationid) where formationdeleted = 0 and studentdeleted = 0 order by studentname ,formationid";
+    else{
+        $sql = "SELECT studentname,studentid FROM Student join Formation using(formationid) join TrainingManager using(Formationid) where initiatorid = ".$_SESSION['initiatorId']." and formationdeleted = 0 and studentdeleted = 0 order by studentname ,formationid";
+    }
+
+    $arr = array();
+    $n = LireDonneesPDO1($mysqlConnection, $sql, $arr);
+    
+    foreach($arr as $data){
+        echo '<a href="displayAllStudentApt.phtml?studentid='.$data['studentid'].'">'.$data['studentname'].'</a></br>';
+    }
+
+
+    include_once("footer.phtml");
+    ?>
+</body>
+
+</html>

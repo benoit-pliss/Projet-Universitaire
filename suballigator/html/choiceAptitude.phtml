@@ -1,0 +1,79 @@
+<?php
+include_once('../php/util/notifs.php');
+if(!isset($_SESSION)){
+    echo "<meta http-equiv='refresh' content='0;url=accueil.phtml'>";
+    die();
+    exit();
+} else if(isset($_SESSION) && ($_SESSION['initiatorIsDirector'] == 0 && $_SESSION['initiatorIsManager'] == 0)){
+    echo "<meta http-equiv='refresh' content='0;url=accueil.phtml'>";
+    die();
+    exit();
+}
+?>
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@2.31.0/dist/full.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="../loader/loader.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../js/tailwind.config.js"></script>
+    <link rel="icon" type="image/png" href="../assets/suballigators_logo.png" />
+    <title>Aptitude</title>
+</head>
+
+<body>
+
+    <?php
+        include_once('navbar.phtml');
+    ?>
+    <div class="my-16  text-2xl font-bold text-center">
+        <h1>Choisissez les aptitudes à travailler pour vos prochaines sessions</h1>
+    </div>
+    
+
+    <?php
+    include '../php/util/pdo_oracle.php';
+    include '../php/util/conn.php';
+
+
+    if (isset($_POST['retour'])) {
+        echo "<meta http-equiv='refresh' content='0;url=choiceSession.phtml'>";
+        die();
+    }
+    if (!isset($_GET['session'])) {
+        echo "<meta http-equiv='refresh' content='0;url=choiceSession.phtml'>";
+        die();
+    }
+
+
+    if (isset($_POST) && isset($_POST['BtSub'])) { // If the form is submitted
+
+        $sql = "DELETE FROM Content where sessionid = " . $_GET['session'];
+        majDonneesPDO($mysqlConnection, $sql);
+
+        // We loop through the array
+        foreach ($_POST as $key => $value) {
+            if ($key != "BtSub") {
+                $sql3 = "SELECT max(contentid)+1 as maxi from Content";
+                $n = LireDonneesPDO1($mysqlConnection, $sql3, $arr3);
+                $sql2 =  "INSERT INTO Content  VALUES (" . $arr3[0]['maxi'] . ", " . $_GET['session'] . "," . $value . ")";
+                majDonneesPDO($mysqlConnection, $sql2);
+            }
+        }
+        // We redirect to the session page
+        echo "<meta http-equiv='refresh' content='0;url=choiceSession.phtml'>";
+        die();
+    }
+
+    include('choiceAptitudeForm.phtml');
+    include_once('footer.phtml');
+
+
+    ?>
+</body>
+
+</html>

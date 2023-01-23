@@ -1,0 +1,183 @@
+<?php
+include_once('../php/util/notifs.php');
+
+//Check if the session already exists and if it doesnt exist, it creates a new one.
+
+if (isset($_SESSION) && $_SESSION['initiatorIsDirector'] == 0) {
+	echo "<meta http-equiv='refresh' content='0;url=accueil.phtml'>";
+    die();
+} else if (!isset($_SESSION)){
+	echo "<meta http-equiv='refresh' content='0;url=accueil.phtml'>";
+    die();
+}
+?>
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@2.31.0/dist/full.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="../loader/loader.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../js/tailwind.config.js"></script>
+    <link rel="icon" type="image/png" href="../assets/suballigators_logo.png" />
+    <title>Modification d'un initiateur</title>
+</head>
+
+<body>
+	<?php
+    include_once('navbar.phtml');
+    ?>
+  <?php 
+	include '../php/util/conn.php';
+    include '../php/util/pdo_oracle.php';
+
+	//Allow us to have everything on the same page
+	echo"<form name='form_retour' action='Modifier_Initiateur.phtml' method='post'>";
+	
+	if(isset($_POST["error"]) && $_POST["error"] == 1){
+		$bool = true;
+	}
+	else{
+		$bool = false;
+	}
+
+	$erreur = true;
+
+
+	
+	if(isset($_POST["env"])){
+
+
+		$erreur = false;
+		//Puts what the user has entered in the form into a variable
+		$nom_ini = $_POST["nom_ini"];
+		//Puts what the user has entered in the form into a variable
+		$nom_formation = $_POST["nom_formation"];
+
+
+		//Checks if the user has choosed a role or not, and if he didnt, returns an error message
+		if(!isset($_POST["role"])) {
+			echo"Il faut choisir une option !<br>";
+		} else {
+			
+			//Checks that the user didnt tried to insert into the database a director with a trainning (impossible in the database), and if he did, returns an error message
+			if($_POST["role"] == "Directeur" && $_POST["nom_formation"] != "default") {
+				echo"On ne peut pas attribué une formation a ce role !<br>";
+				$erreur = true;
+			}
+
+			//Checks if the user forgot to choose a trainning when adding a manager, returns an error message
+			if($_POST["role"] == "Responsable" && $_POST["nom_formation"] == "default") {
+				echo"Il faut attribuer une formation à ce rôle !<br>";
+				$erreur = true;
+			}
+			
+			
+			if($erreur == false) {
+
+				//If the user is trying to insert a director into the database, sets "InitiatorisDirector" to 1
+				if($_POST["role"] == "Directeur") {
+					$update = "UPDATE Initiator set InitiatorisDirector = 1 where InitiatorName = '".$nom_ini."' and InitiatorDeleted = 0";
+					$res = LireDonneesPDO1($mysqlConnection,$update,$tab1);
+				}
+
+				//Inserts into the database the manager and the training that the user choosed
+				if($_POST["role"] == "Initiateur" || $_POST["role"] == "Responsable") {
+					$update = "UPDATE Initiator set InitiatorisDirector = 0 where InitiatorName = '".$nom_ini."' and InitiatorDeleted = 0";
+					$res = LireDonneesPDO1($mysqlConnection,$update,$tab1);
+	
+					if($_POST["role"] == "Responsable") {
+	
+						$trainer_id = "SELECT MAX(trainingManagerId) + 1 as max_id from TrainingManager";
+						$res2 = LireDonneesPDO1($mysqlConnection,$trainer_id,$tab2);
+	
+						$id_ini = "SELECT InitiatorId from Initiator where InitiatorName = '".$nom_ini."'";
+	
+						$id_formation = "SELECT FormationId from Formation where FormationName = '".$nom_formation."'";
+	
+						$insert = "INSERT INTO TrainingManager VALUES ('".$tab2[0]["max_id"]."', (".$id_ini."), (".$id_formation."))";
+						//echo $insert;
+						LireDonneesPDO1($mysqlConnection, $insert,$tab3);
+					}
+	
+				}
+				echo "L'initiateur a bien été modifié !<br>";
+			}
+
+		}
+
+	}
+
+	if ($erreur == true){
+		
+		echo "<input type='hidden' id='error' name='error' value='1'>";
+	}
+
+
+
+
+?>
+<div class="my-16  text-5xl font-bold text-center">
+  	<h2>Modification d'un Initiateur<hr></h2>
+</div>
+  	<form name="form_ajout_annee" action="" method="post">
+		<label for='nom_ini'>Choissisez un Initiateur a modifier : </label>
+		<select class="input input-bordered w-full max-w-xs" name="nom_ini" id="nom_ini" value="" >
+			<?php 
+
+				//Creates a dropdown list with every name of every initiator in the database
+				$req = "SELECT InitiatorName from Initiator";
+				$nbLignes = LireDonneesPDO1($mysqlConnection,$req,$tab);
+				for ($i = 0; $i < $nbLignes; $i++){ 
+					echo "<tr>\n";
+					foreach ($tab[$i] as $key => $val){ 
+						echo "<option>$val</option>\n";
+				}
+				echo "</tr>\n";
+				}
+				//AfficherDonnee($tab, $res);
+			
+			?>
+		</select><br>
+		<br>
+		<div>
+			<label for="directeur">Directeur Technique</label>
+			<input  type="radio" id="directeur" name="role" value="Directeur">
+			&nbsp;
+			&nbsp;
+			<label for="responsable">Responsable de Formation</label>
+			<input  type="radio" id="responsable" name="role" value="Responsable">
+			<!--&nbsp;
+			&nbsp;
+			<label for="initiateur">Initiateur</label>
+			<input  type="radio" id="initiateur" name="role" value="Initiateur">-->
+		</div>
+		<br>
+		<label for='nom_formation'>Choissisez quelle formation vous voulez attribuez au responsable : </label>
+		<select class="input input-bordered w-full max-w-xs" name="nom_formation" id="nom_formation" value="" >
+			<option Checked value="default">-------------------------------</option>
+			<?php 
+
+				//Creates a dropdown list with every training that are in the database
+				$req = "SELECT FormationName from Formation where FormationDeleted = 0";
+				$nbLignes = LireDonneesPDO1($mysqlConnection,$req,$tab);
+				for ($i = 0; $i < $nbLignes; $i++){
+					echo "<tr>\n";
+					foreach ($tab[$i] as $key => $val){ 
+						echo "<option>$val</option>\n";
+				}
+				echo "</tr>\n";
+				}
+				//AfficherDonnee($tab, $res);
+			
+			?>
+		</select><br>
+		<br>
+		<input class="btn btn-primary" type="submit" name="env" value="Modifier">
+	</form>
+	<?php include_once("footer.phtml"); ?> 
+  </body>
+</html>

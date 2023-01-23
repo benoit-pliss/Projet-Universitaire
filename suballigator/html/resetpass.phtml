@@ -1,0 +1,40 @@
+<?php
+session_start();
+include_once('../php/util/notifs.php');
+?>
+
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@2.31.0/dist/full.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="../loader/loader.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../js/tailwind.config.js"></script>
+    <link rel="icon" type="image/png" href="../assets/suballigators_logo.png" />
+    <title>Connexion</title>
+</head>
+
+<body>
+
+<?php
+include_once('navbar.phtml');
+include_once('../php/util/mysql-sae301grp1.php');
+afficherNotifs();
+?>
+
+<div class="my-16  text-5xl font-bold text-center">
+    <h1>Modifier votre mot de passe</h1>
+</div>
+
+<?php
+include_once('../php/auth/resetpass.php');
+include_once('footer.phtml');
+?>
+
+</body>
+
+</html>

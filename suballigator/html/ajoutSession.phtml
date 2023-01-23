@@ -1,0 +1,36 @@
+<?php if ($_SESSION['initiatorIsDirector'] == 1) { ?>
+<form name="ajoutSession" action="<?php $_SERVER['PHP_SELF'] ?>" method="post">
+
+<label for="date">Date de la session : </label>
+<input type="date" name="date" value="<?php if(isset($_POST['date'])) echo $_POST['date']?>">
+
+<label for="heure">Heure de la session : </label>
+<input type="time" name="heure" value="<?php if(isset($_POST['heure'])) echo $_POST['heure']?>">
+
+<select name="type">
+<?php 
+    $sql = "SELECT formationname, formationid FROM Formation where formationdeleted = 0";
+    $arr = array();
+    $n = LireDonneesPDO1($mysqlConnection, $sql, $arr);
+    for ($i = 0; $i < $n; $i++) {
+        echo '<option value="' . $arr[$i]['formationid'] . '">' . $arr[$i]['formationname'] . '</option>';
+    }
+?>
+</select>
+
+<input type="submit" name="submit" value="Ajouter">
+</form>
+
+<?php } else {?>
+<form name="ajoutSession" action="<?php $_SERVER['PHP_SELF'] ?>" method="post">
+
+<label for="date">Date de la session : </label>
+<input type="date" name="date" value="<?php if(isset($_POST['date'])) echo $_POST['date']?>">
+
+<label for="heure">Heure de la session : </label>
+<input type="time" name="heure" value="<?php if(isset($_POST['heure'])) echo $_POST['heure']?>">
+
+<input type="submit" name="submit" value="Ajouter">
+</form>
+
+<?php } ?>

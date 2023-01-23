@@ -1,0 +1,181 @@
+<?php
+include_once('../php/util/notifs.php');
+?>
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="https://cdn.jsdelivr.net/npm/daisyui@2.31.0/dist/full.css" rel="stylesheet" type="text/css" />
+	<link rel="stylesheet" href="../loader/loader.css">
+	<script src="https://cdn.tailwindcss.com"></script>
+	<script src="../js/tailwind.config.js"></script>
+	<link rel="icon" type="image/png" href="../assets/suballigators_logo.png" />
+	<title>Accueil</title>
+</head>
+
+<body>
+
+	<?php
+	include_once('navbar.phtml');
+	?>
+	<div class="my-16  text-5xl font-bold text-center">
+		<h1>Saisie des évaluations des aptitudes travaillées avec les élèves</h1>
+	</div>
+
+	<?php
+
+	include "../php/util/conn.php";
+	include "../php/util/pdo_oracle.php";
+	?>
+	<?php
+	//if the session has not been chosen, display only the session choice form
+	if (!isset($_GET['ValiderSeance'])) {
+		//retrieve from the database the sessions that haven't been marked yet
+		$sql = 'select distinct sessionid,sessiondate,formationname from Content join Session using(sessionid) join Formation using(formationid) where sessiondeleted<>1 and formationdeleted<>1 and sessiondate<Now() and contentid not in (select distinct contentid from Participation) order by sessionid desc';
+		$sqlStatement = $mysqlConnection->prepare($sql);
+		$sqlStatement->execute();
+		$sessions = $sqlStatement->fetchAll();
+	?>
+		<!--- display the form to choose the session --->
+		<form method="get" class="flex flex-col items-center justify-center">
+			<div class="form-control w-full max-w-xs">
+				<label class="label">
+					<span class="label-text">Date de la séance</span>
+				</label>
+				<select class="select select-bordered" name="session">
+					<?php
+					foreach ($sessions as $session) {
+						$date_all = explode(' ', $session["sessiondate"]);
+						$date = explode('-', $date_all[0]);
+						$day = explode(':', $date_all[1]);
+						echo '<option value="' . $session["sessionid"] . '">' . $date[2] . '/' . $date[1] . '/' . $date[0] . ' à ' . $day[0] . 'h' . $day[1] . ' => ' . $session["formationname"] . '</option>';
+					}
+					//submit button to validate the session choice
+					?>
+				</select>
+			</div>
+			<div class="flex items-center justify-center">
+			<button type="submit" name="ValiderSeance" class="btn btn-accent mt-12 mx-2">Valider</button>
+			<button class="btn btn-outline btn-secondary mt-12 mx-2"><a href="accueil.phtml">Annuler</a></button>
+			</div>
+		</form>
+
+
+	<?php
+	}
+	// if the session have been chosen, display the skills and the student from the chosen session
+	if (isset($_GET['ValiderSeance']) || isset($_POST['ValiderAptitudes'])) {
+		$sessionid = $_GET['session'];
+		//retrieve the name of the aptitudes, formation, contents, skills from the database
+		$sql = 'select aptitudeid,aptitudename,formationid,sessiondate,contentid, formationname, skillname from Content join Aptitude using(aptitudeid) join Session using(sessionid) join Formation using( formationid) join Skill using(skillid) where sessionid=' . $sessionid . ' and sessiondeleted!=1 and formationdeleted!=1 and skilldeleted!=1 and aptitudedeleted!=1';
+		$sqlStatement = $mysqlConnection->prepare($sql);
+		$sqlStatement->execute();
+		$aptitudes = $sqlStatement->fetchAll();
+		//retrieve the students from the session from the database
+		$sqlstudents = 'select studentid,studentname from Student join Formation using(formationid) where studentdeleted <>1 and formationdeleted<>1 and formationid=(select formationid from Session where sessionid=' . $sessionid . ')';
+		$sqlStatement = $mysqlConnection->prepare($sqlstudents);
+		$sqlStatement->execute();
+		$students = $sqlStatement->fetchAll();
+		//split the date to make it easier to read
+		$date_all = explode(' ', $aptitudes[0]["sessiondate"]);
+		$date = explode('-', $date_all[0]);
+		$day = explode(':', $date_all[1]);
+		//display the name of the session
+		echo ' <div class="my-16  text-lgxl font-bold text-center"> 
+		<h2> Séance du ' . $date[2] . '/' . $date[1] . '/' . $date[0] . ' à ' . $day[0] . 'h' . $day[1] . ' ==> ' . $aptitudes[0]["formationname"] . ' </h2></div>';
+		//form to validate aptitudes and comment assesments
+		echo '<form method="post">';
+
+		foreach ($students as $student) {
+			//checkbox to check if the student was absent during the session
+			echo '
+					<div class="my-16  text-lgxl font-bold text-center justify-center"> <label><span >Etudiant: ' . $student["studentname"] . ' </span><br><input class="checkbox checkbox-primary" type="checkbox" name="' . $student["studentid"] . 'absent" value="abs" id="' . $student["studentid"] . '" onclick="disableIfAbsent(' . $student["studentid"] . ')">&nbsp;Eleve Absent </label>
+					</div>
+					<div class="grid grid-cols-3 gap-4 text-center ">';
+					
+			foreach ($aptitudes as $aptitude) {
+				$aptitudelength = strlen($aptitude["aptitudename"]);
+				//display the skills and aptitudes worked
+				echo '<div border-y-4>' . $aptitude["skillname"] .'<br>'.$aptitude["aptitudename"] .'</div>
+				';
+				//display the marks available 	
+				echo ' <div > 
+			
+				<label class="' . $student["studentid"] .' flex flex-row sm:justify-center "><input type="radio" class="radio-xs m-2 my-1.5 form-control" name="' . $student["studentid"] . '/' . $aptitude["aptitudeid"] . '"value="1" checked >Non évalué</label>
+		   		<label class="' . $student["studentid"] .' flex flex-row sm:justify-center "><input type="radio" class="radio-xs m-2 form-control" name="' . $student["studentid"] . '/' . $aptitude["aptitudeid"] . '"value="3" >En cours </label>
+		    		<label class="' . $student["studentid"] .' flex flex-row sm:justify-center"><input type="radio" class="radio-xs m-2 form-control" name="' . $student["studentid"] . '/' . $aptitude["aptitudeid"] . '"value="4" >Acquis</label>
+		    		
+		    		
+		    		</div>
+		    		<div class="items-left justify-left"><br><input type="text" class="input input-bordered w-full max-w-xs" name="' . $student["studentid"] . $aptitude["aptitudeid"] . 'commentaire" placeholder="Commentaire"> </div>';
+			}
+			echo'</div>';
+		}
+		// submit the form to validate the data
+		echo '<br><br><div class="flex items-center justify-center"><input class="btn btn-active btn-primary mx-2" type="submit" id="validate" name="ValiderAptitudes" value="Valider la saisie">
+			<button class="btn btn-active btn-secondary mx-2 "><a href="accueil.phtml">Annuler</a></button></div>
+		</form>';
+		
+		//insert in the database the data
+		if (isset($_POST['ValiderAptitudes'])) {
+			//retrieve the id of the participation from the database to insert data in the chronological order
+			$sql = "select max(participationid) as max from Participation";
+			$sqlStatement = $mysqlConnection->prepare($sql);
+			$sqlStatement->execute();
+			$firstid = $sqlStatement->fetchAll();
+			$partid = intval($firstid[0]["max"]);
+			// insert request
+			$req = "INSERT INTO Participation (participationid, contentid, studentid, statusid, commentary) VALUES";
+
+			//for each aptitude of each student insert a new participation in the database
+			foreach ($students as $student) {
+				$studentid = intval($student["studentid"]);
+				foreach ($aptitudes as $aptitude) {
+					$partid = $partid + 1;
+					$contentid = intval($aptitude["contentid"]);
+					if (isset($_POST[$student["studentid"] . 'absent'])) $statusid = 2;
+					else $statusid = $_POST[$student["studentid"] . '/' . $aptitude["aptitudeid"]];
+					if (!empty($_POST[$student["studentid"] . $aptitude["aptitudeid"] . 'commentaire'])) $commentary = '"' . str_replace('"', '', $_POST[$student["studentid"] . $aptitude["aptitudeid"] . 'commentaire']) . '"';
+					else $commentary = 'null';
+					$req = $req . "($partid,$contentid,$studentid,$statusid,$commentary),";
+				}
+			}
+			$req = substr_replace(trim($req), "", -1);
+			
+			//send the insert request to the database to insert all the lines
+			majDonneesPDO($mysqlConnection, $req);
+			//return to the session choice 
+			echo "<meta http-equiv='refresh' content='0;url=evaluation.phtml'>";
+			die();
+		}
+	}
+
+
+	include_once('footer.phtml');
+
+	?>
+
+	<script>
+		/* if the absent checkbox has been check, this function disables the radio buttons to mark the students */
+		function disableIfAbsent(studentid) {
+			radiobuttons = document.getElementsByClassName(studentid);
+			if (document.getElementById(studentid).checked) {
+				for (var i = 0; i < radiobuttons.length; i++) {
+					radiobuttons[i].firstChild.disabled = true;
+					radiobuttons[i].style.color="lightgrey";
+				}
+				
+				
+			} else {
+				for (var i = 0; i < radiobuttons.length; i++) {
+					radiobuttons[i].firstChild.disabled = false;
+					radiobuttons[i].style.color="inherit";
+				}
+				
+			}
+		}
+		
+	</script>

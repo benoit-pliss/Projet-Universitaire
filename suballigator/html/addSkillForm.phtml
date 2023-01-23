@@ -1,0 +1,195 @@
+<?php
+include_once('../php/util/notifs.php');
+include_once('../php/modif_eleve/formationSkill.php');
+?>
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@2.31.0/dist/full.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="../loader/loader.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../js/tailwind.config.js"></script>
+    <link rel="icon" type="image/png" href="../assets/suballigators_logo.png" />
+    <title>MFT</title>
+</head>
+
+<body>
+
+    <?php
+    include_once('navbar_withoutLoader.phtml');
+    ?>
+    <div class="my-16  text-2xl font-bold text-center">
+        <?php
+        $sql = 'SELECT levelname from Level where levelId =' . $_GET['levelId'];
+        $sqlStatement = $mysqlConnection->prepare($sql);
+        $sqlStatement->execute();
+        $levelname = $sqlStatement->fetchAll();
+        ?>
+        <h1>Gestion Compétences du <?= $levelname[0]['levelname'] ?>
+    </div>
+
+    <form action="" method="post" class="flex justify-center -items-center">
+
+        <button type="submit" name="back" value="back" class="btn btn-active btn-secondary">Revenir aux Niveaux<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="ml-4 w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
+            </svg>
+        </button>
+    </form>
+
+    <div class="flex flex-col justify-center items-center">
+
+        <form action="" method="post" class="flex flex-col justify-center items-cente gap-y-8">
+            <div class="my-8  text-lg font-bold text-center">
+                <h1>Ajouter une compétence</h1>
+
+                <div class="form-control w-full max-w-xs">
+                    <label class="label">
+                        <span class="label-text">Nom</span>
+                    </label>
+                    <input type="text" id="name" name="name" placeholder="Type here" class="input input-bordered w-full max-w-xs" />
+                </div>
+                <button class="btn btn-accent mt-10" type="submit" name="addBut">Ajouter</button>
+            </div>
+        </form>
+
+        <div class="mt-16 overflow-x-auto">
+            <table class="table w-full" id="table">
+                <thead>
+                    <tr>
+                        <th>Compétences</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    for ($i = 0; $i < count($all); $i++) {
+                    ?>
+                        <tr class="hover">
+
+                            <td>
+                                <div tabindex="0" class="collapse collapse-open border border-base-300 bg-base-100 rounded-box" style="visibility: visible;">
+                                    <div class="collapse-title text-xl font-medium">
+                                        <?php
+                                        echo $all[$i]['skillname'];
+                                        ?>
+                                    </div>
+                                    <?php
+                                    $sql = 'SELECT aptitudeid, aptitudename from Aptitude where skillId = :skillId and aptitudedeleted = 0';
+                                    $sqlStatement = $mysqlConnection->prepare($sql);
+                                    $sqlStatement->bindParam(':skillId', $all[$i]['skillid']);
+                                    $sqlStatement->execute();
+                                    $allapt = $sqlStatement->fetchAll();
+                                    ?>
+                                    <div class="collapse-content">
+                                        <div class="flex flex-col gap-y-4">
+                                            <form action="" method="post">
+                                                <input name="name" id="name<?= $i ?>" type="text" disabled value="<?= $all[$i]['skillname'] ?>" class="input input-bordered input-primary w-full max-w-xs">
+                                                <button id="<?= $i ?>" type="button" name="modif" value="<?= $all[$i]['skillid'] ?>" onclick="enableInput(this)" class="btn btn-ghost">Modifier</button>
+                                                <button id="sub<?= $i ?>" type="submit" name="valid" value="<?= $all[$i]['skillid'] ?>" style="display: none" class="btn btn-ghost">Valider</button>
+                                                <button id="del<?= $i ?>" type="submit" name="suppr" value="<?= $all[$i]['skillid'] ?>" onclick="return confirm('Êtes-vous sûr(e) de vouloir supprimer cette compétence ?');" class="btn btn-ghost">Supprimer</button>
+                                                <button id="can<?= $i ?>" type="submit" name="cancel" value="<?= $all[$i]['skillid'] ?>" style="display: none" class="btn btn-ghost">Annuler</button>
+                                                &nbsp;&nbsp;
+                                                <button id="manage<?= $i ?>" type="submit" name="aptitude" value="<?= $all[$i]['skillid'] ?>" class="btn btn-ghost mr-12">Gérer les Aptitudes</button>
+                                            </form>
+                                            <table id="apttable<?= $i ?>">
+                                                <?php
+                                                for ($j = 0; $j < count($allapt); $j++) {
+                                                ?>
+                                                    <tr>
+                                                        <td>
+                                                            <?php
+                                                            if ($j == 0) {
+                                                                echo '<b>Aptitudes</b></br>';
+                                                            }
+                                                            ?>
+                                                            <input name="aptname" id="aptname<?= $i . $j ?>" type="text" disabled value="<?= $allapt[$j]['aptitudename'] ?>" class="input input-bordered input-info w-full max-w-xs">
+                                                        </td>
+                                                    </tr>
+                                                <?php
+                                                }
+                                                ?>
+
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </td>
+                        </tr>
+                    <?php
+                    }
+                    ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    </form>
+
+    <?php
+    include_once 'footer.phtml';
+    ?>
+
+    <script>
+        function enableInput(button) {
+
+            for (var i = 0; i < document.getElementById("table").rows.length - 1; i++) {
+                console.log(document.getElementById("table").rows.length);
+                document.getElementById("name" + i).disabled = true;
+
+                document.getElementById("del" + i).style.display = "inline-block";
+                document.getElementById("" + i).style.display = "inline-block";
+                document.getElementById("sub" + i).style.display = "none";
+                document.getElementById("can" + i).style.display = "none";
+
+            }
+
+            document.getElementById("name" + button.id).disabled = false;
+
+            document.getElementById("del" + button.id).style.display = "none";
+            document.getElementById("" + button.id).style.display = "none";
+            document.getElementById("sub" + button.id).style.display = "inline-block";
+            document.getElementById("can" + button.id).style.display = "inline-block";
+
+        }
+
+        function enableInputApt(button) {
+            console.log('pop');
+
+            var id = ("" + button.id).substr(3);
+            var firstid = ("" + button.id).substr(3, 1);
+
+            // console.log(firstid);
+            // console.log(id);
+
+            console.log(document.getElementById("apttable" + firstid));
+
+            for (var i = 0; i < document.getElementById("apttable" + firstid).rows.length - 1; i++) {
+                console.log("aptname" + firstid + i);
+                document.getElementById("aptname" + firstid + i).disabled = true;
+
+                document.getElementById("aptdel" + firstid + i).style.display = "inline-block";
+                document.getElementById("apt" + firstid + i).style.display = "inline-block";
+                document.getElementById("aptsub" + firstid + i).style.display = "none";
+                document.getElementById("aptcan" + firstid + i).style.display = "none";
+
+            }
+
+            document.getElementById("aptname" + id).disabled = false;
+
+            document.getElementById("aptdel" + id).style.display = "none";
+            document.getElementById("apt" + id).style.display = "none";
+            document.getElementById("aptsub" + id).style.display = "inline-block";
+            document.getElementById("aptcan" + id).style.display = "inline-block";
+
+            //document.getElementById('collapse'+id).classList.add('collapse-open');   
+            document.getElementById('collapse' + firstid).focus();
+
+        }
+    </script>
+
+</body>
+
+</html>

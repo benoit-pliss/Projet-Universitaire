@@ -1,0 +1,151 @@
+<?php
+include_once('../php/util/notifs.php');
+?>
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@2.31.0/dist/full.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="../loader/loader.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../js/tailwind.config.js"></script>
+    <link rel="icon" type="image/png" href="../assets/suballigators_logo.png" />
+    <title>Accueil</title>
+</head>
+
+<body>
+
+    <?php
+    include_once('navbar.phtml');
+
+    include '../php/util/conn.php';
+    include '../php/util/pdo_oracle.php';
+
+        $sql = "SELECT studentname, levelid from Student join Formation USING(formationId) join Level USING (Levelid) where studentid = ".$_GET['studentid'];
+        ReadData1($mysqlConnection, $sql, $arr);
+        echo '<div class="my-16  text-3xl font-bold text-center">';
+        echo '<h2>' . $arr[0]['studentname'] . '</h2>';
+        echo '</div>';
+        $sql2 = "SELECT aptitudeid, skillid FROM Aptitude join Skill using(skillid) where aptitudedeleted = 0 and Skilldeleted=0 and levelid=".$arr[0]['levelid']." ORDER BY skillid, aptitudeid";
+        ReadData1($mysqlConnection, $sql2, $arr2);
+        $aptitude = array();
+
+        $sql4 = "SELECT skillid, count(aptitudeid) as count FROM Aptitude join Skill using(skillid) where aptitudeDeleted = 0 and Skilldeleted=0 and levelid=".$arr[0]['levelid']." group by skillid";
+        ReadData1($mysqlConnection, $sql4, $arr4);
+
+        $sql5 = "SELECT aptitudeid, skillid FROM Aptitude join Skill using(skillid) where aptitudeDeleted = 0 and Skilldeleted=0 and  levelid=".$arr[0]['levelid'];
+        ReadData1($mysqlConnection, $sql5, $arr5);
+
+        $dictAptiId = array();
+        for($i = 0; $i<count($arr5); $i++){
+            $dictAptiId[$i] = $arr5[$i]['aptitudeid'];
+        }
+        echo '<div class="flex flex-col justify-center items-center overflow-x-auto">';
+        echo '<table id = "monarrleau" style="table table w-full border border-slate-400">';
+        echo '<thead>';
+        echo '<tr>';
+        echo '<th>Compétences</th>';
+        $j = 0;
+        foreach($arr4 as $skillid){
+            $count = 0;
+            $one = 0;
+            for($i=0 ; $i<$skillid['count']; $i++){
+                $sql9 = "SELECT statusname, count(studentid) as count from Student join Participation using(Studentid) join Status using(Statusid) join Content USING(Contentid) join Aptitude USING(Aptitudeid) join Session using(sessionid) where (Statusid = 3 or Statusid = 4) and Studentid = ".$_GET['studentid']." and Aptitudeid=".$dictAptiId[$j]." and aptitudeDeleted = 0 and sessiondeleted = 0 group by Statusname order by sessiondate desc limit 3";
+                $arr9 = array();
+                ReadData1($mysqlConnection, $sql9, $arr9);
+                if (isset($arr9) && count($arr9) === 1 && $arr9[0]['statusname'] === 'Acquis' && $arr9[0]['count'] == 3) {
+                    $count++;
+                    $one = 1;
+                } else if (isset($arr9) && count($arr9) > 0) {
+                    $one = 1;
+                }
+                $j++;
+            }
+            if ($count == $skillid['count']) {
+                echo '<th colspan="'.$skillid['count'].'" style="background-color: green;">C'.$skillid['skillid'].'</th>';
+            } else if ($one == 1) {
+                echo '<th colspan="'.$skillid['count'].'" style="background-color: orange;">C'.$skillid['skillid'].'</th>';
+            } else {
+                echo '<th colspan="'.$skillid['count'].'">C'.$skillid['skillid'].'</th>';
+            }
+
+        }
+        
+        echo '</tr>';
+
+        echo '<tr>';
+        echo '<th>Aptitudes</th>';
+
+        for($m=0; $m<count($arr2); $m++){
+            $sql6 = "SELECT statusname, count(studentid) as count from Student join Participation using(Studentid) join Status using(Statusid) join Content USING(Contentid) join Aptitude USING(Aptitudeid) join Session using(sessionid) where (Statusid = 3 or Statusid = 4) and Studentid = ".$_GET['studentid']." and Aptitudeid=".$arr2[$m]['aptitudeid']." and aptitudeDeleted = 0 and sessiondeleted = 0 group by Statusname order by sessiondate desc limit 3";
+            $arr6 = array();
+            ReadData1($mysqlConnection, $sql6, $arr6);
+
+            if (isset($arr6) && count($arr6) === 1 && $arr6[0]['statusname'] === 'Acquis' && $arr6[0]['count'] == 3) {
+                echo '<th style="background-color: green;">A'.$arr2[$m]['aptitudeid'].'</th>';
+            } else if (isset($arr6) && count($arr6) > 0) {
+                echo '<th style="background-color: orange;">A'.$arr2[$m]['aptitudeid'].'</th>';
+            } else {
+                echo '<th>A'.$arr2[$m]['aptitudeid'].'</th>';
+            }
+        }
+        echo '</tr>';
+        echo '</thead>';
+        echo '<tbody>';
+        $sql7 = "SELECT distinct sessiondate FROM Student join Participation using(Studentid) join Status using(Statusid) join Content using(Contentid) join Aptitude using(aptitudeId) join Session USING (Sessionid) where studentId=".$_GET['studentid']." order by Sessiondate";
+        ReadData1($mysqlConnection, $sql7, $arr7);
+        if(isset($arr7)){
+            foreach($arr7 as $sessiondate){
+                echo '<tr>';
+                $date_all = explode(' ', $sessiondate['sessiondate']);
+                $date = explode('-', $date_all[0]);
+                $day = explode(':', $date_all[1]);
+                echo "<th>".$date[2].'/'.$date[1].'/'.$date[0].' à '.$day[0].'h'.$day[1]."</th>";
+    
+                $sql8 = "SELECT distinct sessiondate, aptitudeid, statusname FROM Student join Participation using(Studentid) join Status using(Statusid) join Content using(Contentid) join Aptitude using(aptitudeId) join Session USING (Sessionid) where studentId=".$_GET['studentid']." and sessiondate='".$sessiondate['sessiondate']."' order by Sessiondate";
+                $arr8 = array();
+                ReadData1($mysqlConnection, $sql8, $arr8);
+                for($i = 0; $i<count($arr5); $i++){
+                    $inarrleau = 0;
+                    $value = null;
+                    foreach($arr8 as $aptitudeid){
+                        if ($aptitudeid['aptitudeid'] == $dictAptiId[$i]){
+                            $inarrleau = 1;
+                            $value = $aptitudeid['statusname'];
+                        }
+                    }
+                    if ($inarrleau == 1){
+                        if ($value == 'Acquis'){
+                            echo '<td class="border border-slate-300" style="background-color: green;"></td>';
+                        } else if ($value == 'En cours'){
+                            echo '<td class="border border-slate-300" style="background-color: orange;"></td>';
+                        } else if ($value == 'Non-Évalué'){
+                            echo '<td class="border border-slate-300" style="background-color: red;"></td>';
+                        } else if ($value == 'Absent'){
+                            echo '<td class="border border-slate-300" style="background-color: gray;"></td>';
+                        } else {
+                            echo '<td></td>';
+                        }
+                    } else {
+                        echo '<td  class="border border-slate-300"></td>';
+                    }
+                }
+                echo '</tr>';
+            }
+        }
+        
+        echo '</tbody>';
+        echo '</table>';
+        echo '</div>';
+
+        echo '<p>Acquis : <span style="background-color: green;">&nbsp;&nbsp;&nbsp;&nbsp;</span></p>';
+        echo '<p>En cours : <span style="background-color: orange;">&nbsp;&nbsp;&nbsp;&nbsp;</span></p>';
+        echo '<p>Non-Évalué : <span style="background-color: red;">&nbsp;&nbsp;&nbsp;&nbsp;</span></p>';
+        echo '<p>Absent : <span style="background-color: gray;">&nbsp;&nbsp;&nbsp;&nbsp;</span></p>';
+        include_once("footer.phtml");
+    ?>
+</body>
+</html>

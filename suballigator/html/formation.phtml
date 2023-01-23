@@ -1,0 +1,116 @@
+<?php
+include_once('../php/util/notifs.php');
+if(!isset($_SESSION)){
+    echo "<meta http-equiv='refresh' content='0;url=accueil.phtml'>";
+    die();
+    
+} else if(isset($_SESSION) && ($_SESSION['initiatorIsDirector'] == 0 && $_SESSION['initiatorIsManager'] == 0)){
+    echo "<meta http-equiv='refresh' content='0;url=accueil.phtml'>";
+    die();
+    
+}
+?>
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@2.31.0/dist/full.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="../loader/loader.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../js/tailwind.config.js"></script>
+    <link rel="icon" type="image/png" href="../assets/suballigators_logo.png" />
+    <title>Formation</title>
+</head>
+
+<body>
+
+    <?php
+    include_once('navbar_withoutLoader.phtml');
+    ?>
+    <?php
+include '../php/util/conn.php';
+include_once  '../php/util/pdo_oracle.php';
+
+if (!empty($_GET['formationId'])){
+
+
+
+    $formationId = $_GET['formationId'];
+
+    if(isset($_POST['addBut'])){
+
+        if (!empty($_POST['firstName']) && !empty($_POST['surname']) && !empty($_POST['phone'])){
+            $studentId = 'select max(studentId)+1 as stuId from Student';
+            $nblignes = LireDonneesPDO1($mysqlConnection, $studentId, $all);
+
+
+
+            $sql = "insert into Student (studentId, studentName, formationId, studentDeleted, studentPhone) values ('" .$all[0]['stuId']."','". mb_strtoupper($_POST['surname']) ." " . $_POST['firstName'] ."','" . $_GET['formationId'] . "', '0', '" . $_POST['phone'] . "')";
+            $sqlStatement = $mysqlConnection->prepare($sql);
+            $sqlStatement->execute();
+            //echo $sql;
+            echo '<script>window.location.href = "formation.phtml?formationId=' . $formationId . '";</script>';
+
+        }
+    }
+
+    if (isset($_POST['valid'])){
+        print_r($_POST);
+        $sql = "update Student set studentName = '". $_POST['name'] ."', studentPhone = '". $_POST['phone'] ."' where studentId = '" . $_POST['valid'] . "'";
+
+        majDonneesPDO($mysqlConnection, $sql);
+        unset ($_POST['valid']);
+        echo '<script>window.location.href = "formation.phtml?formationId=' . $formationId . '";</script>';
+
+    }
+
+    // List of student who participate at this formation
+    $sql = 'SELECT studentid, studentname, StudentPhone from Student where Formationid = :formationId and studentdeleted = 0';
+
+    $sqlStatement = $mysqlConnection->prepare($sql);
+    $sqlStatement->bindParam(':formationId', $formationId);
+    $sqlStatement->execute();
+    $all = $sqlStatement->fetchAll();
+
+    if (!empty($_POST['suppr'])) {
+        // check if Student is in this formation
+        for ($i = 0; $i < count($all); $i++) {
+            if ($all[$i]['studentid'] == $_POST['suppr']) {
+                $sql = 'UPDATE Student SET studentdeleted = 1 WHERE studentid = :studentid';
+                $sqlStatement = $mysqlConnection->prepare($sql);
+                $sqlStatement->bindParam(':studentid', $_POST['suppr']);
+                $sqlStatement->execute();
+            }
+        }
+        echo '<script>window.location.href = "formation.phtml?formationId=' . $formationId . '";</script>';
+    }
+
+    include 'addStudentForm.phtml';
+
+
+
+}
+include_once("footer.phtml");
+?>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

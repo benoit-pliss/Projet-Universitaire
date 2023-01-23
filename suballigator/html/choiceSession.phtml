@@ -1,0 +1,117 @@
+<?php
+include_once('../php/util/notifs.php');
+if(!isset($_SESSION)){
+    echo "<meta http-equiv='refresh' content='0;url=accueil.phtml'>";
+    die();
+    exit();
+} else if(isset($_SESSION) && ($_SESSION['initiatorIsDirector'] == 0 && $_SESSION['initiatorIsManager'] == 0)){
+    echo "<meta http-equiv='refresh' content='0;url=accueil.phtml'>";
+    die();
+    exit();
+}
+?>
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@2.31.0/dist/full.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="../loader/loader.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../js/tailwind.config.js"></script>
+    <link rel="icon" type="image/png" href="../assets/suballigators_logo.png" />
+    <title>Accueil</title>
+</head>
+
+<body>
+
+    <?php
+    include_once('navbar.phtml');
+    ?>
+    
+    <div class="my-16  text-5xl font-bold text-center">
+        <h1>Choisissez les aptitudes à travailler pour vos prochaines sessions</h1>
+    </div>
+    <?php
+    include '../php/util/conn.php';
+    include '../php/util/pdo_oracle.php';
+
+    if (isset($_POST) && isset($_POST['submit'])) {
+        $sql6 = "SELECT max(sessionid) +1 as count from Session";
+        $arr6 = array();
+        $n = ReadData1($mysqlConnection, $sql6, $arr6);
+
+        if($_SESSION['initiatorIsDirector'] == 1){
+            $sql = "INSERT INTO Session VALUES (".$arr6[0]['count'].", '".$_POST['date']." ".$_POST['heure'].":00"."', ".$_POST['type'].", 0)";
+
+        } else {
+            $sql7 = "SELECT formationid  from Formation join TrainingManager using(formationid) join Initiator using(initiatorid) where initiatorid = ".$_SESSION['initiatorId'];
+            $n = ReadData1($mysqlConnection, $sql7, $arr7);
+            $sql = "INSERT INTO Session  VALUES (".$arr6[0]['count'].", '".$_POST['date'].' '.$_POST['heure'].':00'."', ".$arr7[0]['formationid'].", 0)";
+
+        }
+        majDonneesPDO($mysqlConnection, $sql);
+    }
+    // display the list of sessions
+    function displaySessions($arr, $nbLignes, $mysqlConnection)
+    {
+        if ($nbLignes > 0) {
+            echo '<div class="flex flex-col justify-center items-center overflow-x-auto mt-16">
+            <table name="eleves" class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Formation</th>
+                        <th>Date de session</th>
+                        <th>Nombre d\'aptitude à Travailler</th>
+                    </tr>
+                </thead>
+                <tbody>';
+            for ($i = 0; $i < $nbLignes; $i++) {
+                // redirect to choiceAptitude.php to choose aptitudes in the session
+                echo '<tr style="cursor: pointer" class="hover" onclick="location.href=\'choiceAptitude.phtml?session=' . $arr[$i]['sessionid'] . '\'">';
+                $j = 0;
+                foreach ($arr[$i] as $data) {
+                    if ($j < count($arr[0]) - 1)
+                        if ($j == 1) {
+                            // rewrite the date to a more readable format
+                            $date_all = explode(' ', $arr[$i]['sessiondate']);
+                            $date = explode('-', $date_all[0]);
+                            $day = explode(':', $date_all[1]);
+                            echo "<td>" . $date[2] . '/' . $date[1] . '/' . $date[0] . ' à ' . $day[0] . 'h' . $day[1] . "</td>";
+                        } else {
+                            echo "<td>$data</td>";
+                        }
+                    $j += 1;
+                }
+                $sql = "SELECT count(*) as COUNT from Content join Session using(sessionid) where sessiondeleted = 0 and sessionid =" . $arr[$i]['sessionid'];
+                $arr5 = array();
+                $n = ReadData1($mysqlConnection, $sql, $arr5);
+
+                echo "<td align='center'>" . $arr5[0]['COUNT'] . "</td>";
+                echo "</tr>";
+            }
+            echo "</tbody></table></div>";
+        } else {
+            echo "Pas de ligne<br />\n";
+        }
+    }
+    include 'ajoutSession.phtml';
+    if ($_SESSION['initiatorIsDirector'] == 1)
+        $sql = "SELECT formationname, sessiondate,sessionid FROM Session join Formation using(formationid) where formationdeleted = 0 and sessiondeleted = 0 order by sessiondate asc, formationid";
+    else{
+        $sql = "SELECT distinct formationname, sessiondate,sessionid FROM Session join Formation using(formationid) join TrainingManager using(Formationid) where initiatorid = ".$_SESSION['initiatorId']." and formationdeleted = 0 and sessiondeleted = 0 order by sessiondate asc, formationid";
+    }
+
+    $arr = array();
+    $n = ReadData1($mysqlConnection, $sql, $arr);
+    
+    displaySessions($arr, $n, $mysqlConnection);
+
+
+    include_once("footer.phtml");
+    ?>
+</body>
+
+</html>

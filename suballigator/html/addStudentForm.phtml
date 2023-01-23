@@ -1,0 +1,90 @@
+
+    <div class="my-16  text-5xl font-bold text-center">
+        <h1>Gestion d'élève</h1>
+    </div>
+
+    <div class="GestionContainer my-10  text-2xl font-bold text-center">
+
+        <div class="add--student--form mb-20">
+            <form action="" method="post">
+                <fieldset>
+                    <label class="mr-20">Ajouter un Éleve ➤</label>
+                    <label> Prénom : </label>
+                    <input class="input input-bordered w-full max-w-xs" type="text" id="firstName" name="firstName" value=""> &nbsp;&nbsp;&nbsp;
+
+                    <label> Nom : </label>
+                    <input class="input input-bordered w-full max-w-xs" type="text" id="surname" name="surname" value=""> &nbsp;&nbsp;&nbsp;
+
+                    <label> Tél. : </label>
+                    <input class="input input-bordered w-full max-w-xs" type="tel" id="phone" name="phone" pattern="0[0-9]{9}">&nbsp;&nbsp;&nbsp;
+
+                    <input type="submit" name="addBut" value="Ajouter">
+
+                </fieldset>
+            </form>
+        </div>
+
+        <div class="student--list flex justify-center">
+            <table id="table" class="table table-striped">
+                <form action="" method="post">
+                    <thead>
+                    <tr>
+                        <th >Nom</th>
+                        <th >Téléphone</th>
+                        <th >Modifier</th>
+                        <th >Supprimer</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <?php
+                    for ($i = 0; $i < count($all); $i++) {
+                    ?>
+                        <tr>
+                            <td ><input name="name" id="name<?= $i ?>" type="text" disabled value="<?= $all[$i]['studentname'] ?>"></td>
+                            <td ><input name="phone" id="phone<?= $i ?>" type="text" disabled value="<?= $all[$i]['StudentPhone'] ?>"></td>
+                            <td >
+                                <button class id="<?= $i ?>" type="button" name="modif" value="<?= $all[$i]['studentid'] ?>" onclick="enableInput(this)">🖉</button>
+                                <button id="sub<?= $i ?>" type="submit" name="valid" value="<?= $all[$i]['studentid'] ?>" style="display: none">Valider</button>
+
+                            </td>
+                            <td >
+                                <button id="del<?= $i ?>" type="submit" name="suppr" value="<?= $all[$i]['studentid'] ?>" onclick="return confirm('Êtes-vous sûr de vouloir supprimer l\'élève ?');">❌</button>
+                                <button id="can<?= $i ?>" type="submit" name="cancel" value="<?= $all[$i]['studentid'] ?>" style="display: none">Annuler</button>
+
+                            </td>
+                        </tr>
+                    <?php
+                    }
+                    ?>
+                </tbody>
+                </form>
+            </table>
+        </div>
+    </div>
+
+
+    <script>
+        function enableInput(button) {
+
+            for (var i = 0; i < document.getElementById("table").rows.length - 1; i++) {
+                console.log(document.getElementById("table").rows.length);
+                document.getElementById("name" + i).disabled = true;
+                document.getElementById("phone" + i).disabled = true;
+
+                document.getElementById("del" + i).style.display = "inline-block";
+                document.getElementById("" + i).style.display = "inline-block";
+                document.getElementById("sub" + i).style.display = "none";
+                document.getElementById("can" + i).style.display = "none";
+
+            }
+
+            document.getElementById("name" + button.id).disabled = false;
+            document.getElementById("phone" + button.id).disabled = false;
+
+            document.getElementById("del" + button.id).style.display = "none";
+            document.getElementById("" + button.id).style.display = "none";
+            document.getElementById("sub" + button.id).style.display = "inline-block";
+            document.getElementById("can" + button.id).style.display = "inline-block";
+
+        }
+    </script>

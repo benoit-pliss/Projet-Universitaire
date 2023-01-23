@@ -1,0 +1,126 @@
+<?php
+include_once('../php/util/notifs.php');
+include_once('../php/modif_eleve/formationApt.php');
+?>
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@2.31.0/dist/full.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="../loader/loader.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../js/tailwind.config.js"></script>
+    <link rel="icon" type="image/png" href="../assets/suballigators_logo.png" />
+    <title>MFT</title>
+</head>
+
+<body>
+
+    <?php
+    include_once('navbar_withoutLoader.phtml');
+
+    $sql = 'SELECT skillname from Skill where skillId =' . $_GET['skillId'];
+    $sqlStatement = $mysqlConnection->prepare($sql);
+    $sqlStatement->execute();
+    $levelname = $sqlStatement->fetchAll();
+    ?>
+    <div class="my-16  text-2xl font-bold text-center">
+        <h1>Gestion des Aptitudes de la compétence : <?= $levelname[0]['skillname'] ?></h1>
+    </div>
+
+
+    <form action="" method="post" class="flex justify-center -items-center">
+        <button type="submit" class="btn btn-active btn-secondary" name="back" value="<?= $_GET['levelId'] ?>">Revenir aux Compétences<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="ml-4 w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
+            </svg></button>
+    </form>
+
+    <div class="flex flex-col justify-center items-center">
+        <form action="" method="post" class="flex flex-col justify-center items-cente gap-y-8">
+            <div class="my-8  text-lg font-bold text-center">
+                <h1>Ajouter une aptitude</h1>
+
+                <label class="label">
+                    <span class="label-text">Nom</span>
+                </label>
+                <input type="text" id="name" name="name" placeholder="Type here" class="input input-bordered w-full max-w-xs" />
+                <button class="btn btn-accent" type="submit" name="addBut">Ajouter</button>
+
+            </div>
+        </form>
+    </div>
+
+    <div class="flex flex-col justify-center items-center">
+
+        <div class="mt-16 overflow-x-auto">
+            <table class="table w-full" id="table">
+
+                <thead>
+                    <tr>
+                        <th>Nom</th>
+                        <th>Modifier</th>
+                        <th>Supprimer</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    for ($i = 0; $i < count($all); $i++) {
+                    ?>
+                        <tr class="hover">
+                            <form action="" method="post">
+                                <td><input name="name" id="name<?= $i ?>" type="text" disabled value="<?= $all[$i]['aptitudename'] ?>" class="input input-bordered input-primary w-full max-w-xs"></td>
+                                <td>
+                                    <button id="<?= $i ?>" type="button" name="modif" value="<?= $all[$i]['aptitudeid'] ?>" onclick="enableInput(this)" class="btn btn-ghost">Modifier</button>
+                                    <button id="sub<?= $i ?>" type="submit" name="valid" value="<?= $all[$i]['aptitudeid'] ?>" style="display: none" class="btn btn-ghost">Valider</button>
+
+                                </td>
+                                <td>
+                                    <button id="del<?= $i ?>" type="submit" name="suppr" value="<?= $all[$i]['aptitudeid'] ?>" onclick="return confirm('Êtes-vous sûr(e) de vouloir supprimer cette aptitude ?');" class="btn btn-ghost">Supprimer</button>
+                                    <button id="can<?= $i ?>" type="submit" name="cancel" value="<?= $all[$i]['aptitudeid'] ?>" style="display: none" class="btn btn-ghost">Annuler</button>
+                                </td>
+                            </form>
+                        </tr>
+                    <?php
+                    }
+                    ?>
+                </tbody>
+
+            </table>
+        </div>
+    </div>
+
+    <?php
+    include_once('footer.phtml');
+    ?>
+
+
+    <script>
+        function enableInput(button) {
+
+            for (var i = 0; i < document.getElementById("table").rows.length - 1; i++) {
+                console.log(document.getElementById("table").rows.length);
+                document.getElementById("name" + i).disabled = true;
+
+                document.getElementById("del" + i).style.display = "inline-block";
+                document.getElementById("" + i).style.display = "inline-block";
+                document.getElementById("sub" + i).style.display = "none";
+                document.getElementById("can" + i).style.display = "none";
+
+            }
+
+            document.getElementById("name" + button.id).disabled = false;
+
+            document.getElementById("del" + button.id).style.display = "none";
+            document.getElementById("" + button.id).style.display = "none";
+            document.getElementById("sub" + button.id).style.display = "inline-block";
+            document.getElementById("can" + button.id).style.display = "inline-block";
+
+        }
+    </script>
+
+</body>
+
+</html>
