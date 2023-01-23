@@ -1,0 +1,76 @@
+<div class="parent">
+
+    <div class="gridHead title">
+        <button class="ui button" onclick="window.location.href='coureurs.php'" >Retour</button>
+
+
+        <img class="flag" src="https://countryflagsapi.com/svg/<?= $rescoureur['CODE_ISO'];?>" alt="Drapeau de <?= $rescoureur['NATNOM'];?>" title="<?= $rescoureur['NATNOM'];?>" width="auto" height="100">
+        <!--        <div class="ui input">-->
+        <!--            <input type="text" placeholder="Search..." value="--><?php //verifierText($_POST['N_COUREUR'])?><!--">-->
+        <!--        </div>-->
+        <h1><?=$nom . " " .$prenom?></h1>
+        <form action="" method="post" class="righticon">
+            <button class="ui button" name="modifier" onclick=""><i class="pencil alternate icon"></i> Modifier</button>
+        </form>
+    </div>
+    <div class="gridBody">
+        <h2>Infos Générales</h2>
+
+        <p>Nationalité : <?= $rescoureur['NATNOM'];?></p>
+        <p>Année naissance : <?= $naissance ?></p>
+        <p>Age: <?= $age;?></p>
+
+        <p>A participé <?= sizeof($resparticoureur)?> fois au TDF.</p>
+
+        <?php
+        if (isset($_POST['modifier'])) {
+            include "src/html/modif_coureur.phtml";
+        }
+
+        include "nationalites.php";
+
+        ?>
+
+
+
+        <table border="1" class="ui celled table">
+            <thead>
+            <tr>
+                <th>Année</th>
+                <th>Classement final</th>
+                <th>Temps</th>
+                <th>Equipe</th>
+            </tr>
+            </thead>
+            <?php foreach($resparticoureur as $tdf) { ?>
+                <tr>
+
+                    <td>
+                        <a href="edition.php?annee=<?= $tdf['ANNEE'];?>">
+                            <?= $tdf['ANNEE'];?>
+                        </a>
+                    </td>
+                    <td> <?= $tdf['RANG_ARRIVEE'];?></td>
+
+                    <td> <?= $tdf['TEMPS'];?> h</td>
+                    <td>
+                        <a href="equipe.php?n_equipe=<?= $tdf['N_EQUIPE'];?>">
+                        <?= $tdf['NOMSPONSOR'];?>
+                        </a>
+                    </td>
+
+
+
+
+
+                </tr>
+            <?php } ?>
+        </table>
+    </div>
+</div>
+
+
+
+</body>
+
+</html>

@@ -1,0 +1,9 @@
+<?php
+
+//includes
+
+
+//Fonctions
+
+//Variables
+?>

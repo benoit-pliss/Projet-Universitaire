@@ -1,0 +1,107 @@
+<div class="parent">
+    <div class="gridHead">
+        <div class="ui fluid category search">
+            <div class="ui icon input">
+                <input type="text" id="recherche" placeholder="Rechercher ..." oninput="afficheCoureurs($('#recherche').val(), $('#filtre').val(), $('#sens').val())">
+                <select id="filtre" onchange="afficheCoureurs($('#recherche').val(), $('#filtre').val(), $('#sens').val())" class="ui selection dropdown">
+                    <option selected value="TC.nom">NOM</option>
+                    <option value="TC.prenom">Prénom</option>
+                    <option value="TN.nom">Nationalité</option>
+                </select>
+                <button id="sens" class="ui button icon" onclick="sensButton(this); afficheCoureurs($('#recherche').val(), $('#filtre').val(), $('#sens').val())" value="ASC"><i class="arrow down icon"></i></button>
+            </div>
+            <div class="ui left">
+                <button class="ui primary button" onclick="window.location.href='insertion_coureur.php'">Ajouter un coureur</button>
+            </div>
+            <div class="results"></div>
+        </div>
+
+    </div>
+    <div class="gridBody" id="tab">
+        <form method="post">
+        <table class="ui celled table">
+            <thead>
+                <tr>
+                    <th>NOM</th>
+                    <th>Prénom</th>
+                    <th>Année Naissance</th>
+                    <th>Nationalité</th>
+                    <th><i class="trash icon"></th>
+                </tr>
+            </thead>
+
+            <tbody id="tablesCoureurs">
+            </tbody>
+        </table>
+        </form>
+        <div id="load" class='ui active centered inline loader'>
+        </div>
+
+
+    </div>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.5.0/dist/semantic.min.js"></script>
+<script>
+    $('.ui.dropdown').dropdown();
+    var xhttp = new XMLHttpRequest();
+
+    function afficheCoureurs($search, $filtre, $sens) {
+        $('#load').show();
+        $('#tablesCoureurs').html("");
+        xhttp.abort();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                if(this.responseText != "") {
+                    $('#tablesCoureurs').html(this.responseText);
+                }else {
+                    $('#tablesCoureurs').html("<tr><td colspan='5'>Aucun résultat</td></tr>");
+                }
+                $('#load').hide();
+            }
+        };
+        xhttp.open("GET", "src/php/ajax_coureurs.php?search=" + $search + "&filtre=" + $filtre + "&sens=" + $sens, true);
+        xhttp.send();
+    }
+
+    function sensButton(el){
+        //rotate 180deg the arrow with smooth transition
+        console.info(el);
+        if (el.style.transform === "rotate(180deg)"){
+            el.style.transform = "rotate(0deg)";
+            el.value = "ASC";
+        }else{
+            el.style.transform = "rotate(180deg)";
+            el.value = "DESC";
+        }
+
+    }
+
+    afficheCoureurs();
+
+    function supprimerCoureur(id){
+        if (confirm("Voulez-vous vraiment supprimer ce coureur ?")){
+            xhttp.abort();
+            xhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    afficheCoureurs();
+                }
+            };
+            xhttp.open("GET", "src/php/ajax_coureurs.php?supprimer=" + id, true);
+            xhttp.send();
+        }
+    }
+
+    function confirmation(nom, prenom){
+        return confirm("Voulez-vous vraiment supprimer le coureur" + nom + " " + prenom + " ?");
+
+    }
+
+
+
+
+
+
+</script>
+

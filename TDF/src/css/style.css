@@ -1,0 +1,52 @@
+.parent {
+    display: grid;
+    grid-template-columns: 0.6fr repeat(3, 1fr) 0.6fr;
+    grid-template-rows: repeat(5, 1fr);
+    grid-column-gap: 0;
+    grid-row-gap: 0;
+    height: 100%;
+    padding: 50px;
+}
+
+.gridleft {
+    grid-area: 1 / 1 / 3 / 1;
+    height: 100%;
+    position: fixed;
+}
+
+.gridHead {
+    grid-area: 1 / 2 / 2 / 5;
+    padding: 20px;
+    /*background-color: #909090;*/
+
+}
+
+.gridBody {
+    grid-area: 2 / 2 / 6 / 5;
+    padding: 20px;
+    /*background-color: #909090;*/
+}
+
+tr:hover {
+    background-color: #f5f5f5;
+    cursor: pointer;
+}
+
+img.flag {
+    box-shadow: 0 0 15px 0 rgba(0, 0, 0, 0.5);
+    margin-right: 30px;
+}
+
+.title {
+    display: flex;
+}
+
+.righticon {
+    margin-left: auto;
+    margin-right: 0;
+    vertical-align: center;
+}
+
+a:hover {
+    text-decoration: underline;
+}

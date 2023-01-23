@@ -1,0 +1,68 @@
+<div class="ui segment parent">
+    <div class="gridHead">
+<h1>Les Nations participantes</h1>
+<form action="" method="post">
+    <div class="ui form">
+        <div class="field">
+            <select name="annee">
+                <?php
+                
+                foreach ($tabAnnee as $value) { ?>
+                    <option value="<?= $value['ANNEE'] ?>" <?php VerifierSelect('annee', $value['ANNEE']) ?>><?= $value['ANNEE'] ?></option>
+                <?php } ?>
+            </select>
+        </div>
+    </div>
+    <button name="choixAnnee" class="ui button"> Rechercher </button>
+</form>
+<div class="ui styled accordion">
+<?php
+    $sql = "select count(*) as nb, code_cio, nation.nom as nom_nation 
+            from tdf_nation nation
+            join tdf_app_nation app_nation using(code_cio) 
+            join tdf_coureur using(n_coureur) 
+            join tdf_parti_coureur using(n_coureur) 
+            where annee = ".$annee."
+            group by nation.nom, code_cio
+            order by nb desc";
+    $nbNation = LireDonneesPDO1($conn,$sql,$tabNationsParticipantes);
+    foreach ($tabNationsParticipantes as $value) { ?>
+        <div class="active title">
+            <i class="dropdown icon"></i>
+            <?= $value['NOM_NATION'] . ' - Nombre de coureur : ' . $value['NB'] ?>
+        </div>
+        <div class="content">
+            <?php
+            $sql = "select n_coureur, coureur.nom as nom_coureur, coureur.prenom as prenom_coureur, sponsor.nom as nom_equipe 
+                    from tdf_parti_coureur parti_coureur
+                    join tdf_coureur coureur using(n_coureur)
+                    join tdf_app_nation app_nation using( n_coureur)
+                    join tdf_parti_equipe parti_equipe using(annee,n_equipe, n_sponsor)
+                    join tdf_sponsor sponsor using(n_equipe, n_sponsor, code_cio)
+                    where code_cio='".$value['CODE_CIO']."' and annee=".$annee ."
+                    order by coureur.nom, coureur.prenom";
+            $nbCoureur = LireDonneesPDO1($conn,$sql,$tabCoureur);
+            foreach ($tabCoureur as $coureur) { ?>
+                <div class="ui list">
+                    <div class="item">
+                        <i class="user icon"></i>
+                        <div class="content">
+                            <div class="header"><a class="header" href="coureur.php?n_coureur=<?= $coureur['N_COUREUR'] ?>"><?= $coureur['NOM_COUREUR'] .' '. $coureur['PRENOM_COUREUR'] ?></a></div>
+                            <div class="description"><?= $coureur['NOM_EQUIPE'] ?></div>
+                        </div>
+                    </div>
+                </div>
+            <?php } ?>
+        </div>
+    <?php } ?>
+</div>
+</div>
+</div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.5.0/dist/semantic.min.js"></script>
+<script>
+    $(document).ready(function(){
+        $('.ui.accordion').accordion();
+    });
+	$('.ui.dropdown').dropdown();
+</script>

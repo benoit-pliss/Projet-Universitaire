@@ -1,0 +1,102 @@
+<div class="ui segment parent">
+    <div class="gridHead">
+        <button class="ui button" onclick="window.location.href='coureurs.php'"><i class="arrow left icon"></i>Retour
+        </button>
+        <?php if ($anneeCorrecte): ?>
+            <button class="ui button" onclick="window.location.href='insertion_parti_equipe.php'"><i
+                        class="arrow left icon"></i>Changer d'édition
+            </button>
+        <?php endif; ?>
+        <div class="ui raised padded segment">
+            <form class="ui form <?php if ($erreur) echo ' error'; ?>" action="" method="get">
+                <!-- class error will show error message-->
+                <h4 class="ui dividing header">Insertion d'une participation pour une équipe</h4>
+                <!--Choix de l'édition-->
+                <div class="field" id="annee_field">
+                    <label for="annee">Choix de l'édition</label>
+                    <input type="number" id="annee" name="ANNEE" placeholder="Entrez une année..."
+                           value="<?php verifierTextGET("ANNEE"); ?>" <?php if ($anneeCorrecte) echo "disabled"; ?>>
+                </div>
+
+                <?php if ($anneeCorrecte): ?>
+                <!--Si l'année est correcte, on peut alors demander le coureur et son équipe à l'utilisateur-->
+            </form>
+            <form class="ui form <?php if ($erreur) echo ' error'; ?>" action="" method="post">
+
+                <div class="ui field" id="directeurs_field">
+                    <label for="select_dir">Choix des directeurs</label>
+                    <select id="select_dir" name="directeurs[]" multiple="" class="ui fluid search dropdown">
+                        <?php
+                        $res = $conn->query("select NOM || ' ' || PRENOM as DIRECTEUR, N_DIRECTEUR from TDF_DIRECTEUR")->fetchAll(PDO::FETCH_ASSOC);
+                        foreach ($res as $directeur) :?>
+                            <option value="<?= $directeur['N_DIRECTEUR']; ?>" <?php if (isset($_POST['directeurs']) && !empty($_POST['directeurs'] && in_array($directeur['N_DIRECTEUR'], $_POST['directeurs']))) echo 'selected'; ?>><?= $directeur['DIRECTEUR']; ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="field" id="equipe_field">
+                    <label for="menu">Equipe*</label>
+                    <div class="ui fluid search selection dropdown">
+                        <input type="hidden"
+                               name="EQUIPE" <?php if (isset($_POST['EQUIPE'])) echo "value=\"" . $_POST['EQUIPE'] . "\"" ?>>
+                        <i class="dropdown icon"></i>
+                        <div class="default text">Sélectionnez une Equipe ...</div>
+                        <div class="menu" id="menuEquipe">
+                            <?php
+                            //Requête qui récupère les équipes qui peuvent participer à l'édition
+                            //c.-à-d. Les équipes  qui
+                            $res = $conn->query("select N_EQUIPE || '~' || N_SPONSOR as equipe, TS.NOM, lower(substr(TN.CODE_ISO, 0, 2)) as CODE_ISO from TDF_SPONSOR TS
+                                                                join TDF_NATION TN on TS.CODE_CIO = TN.CODE_CIO
+                                                                where ANNEE_SPONSOR = (select max(ANNEE_SPONSOR) from TDF_SPONSOR
+                                                                where N_EQUIPE = TS.N_EQUIPE
+                                                                and ANNEE_SPONSOR <= $annee)
+                                                                and N_EQUIPE in (select N_EQUIPE from TDF_EQUIPE
+                                                                where nvl(ANNEE_DISPARITION, ($annee+1)) >= $annee
+                                                                and ANNEE_CREATION <= $annee)
+                                                                order by TS.NOM")->fetchAll(PDO::FETCH_ASSOC);
+                            foreach ($res as $equipe) :?>
+                                <div class="item" data-value="<?= $equipe['EQUIPE'] ?>"><i
+                                            class="<?= $equipe['CODE_ISO'] ?> flag"></i><?= $equipe['NOM']; ?></div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="subButton" class="ui button" type="submit" name="subButton" value="Envoyer">Insérer la
+                    participation
+                </button>
+
+                <?php else: ?>
+                    <!--sinon l'année n'est pas renseignée
+                    On affiche ce bouton-->
+                    <button type="submit" value="annee" class="ui button">Valider</button>
+                <?php endif; ?>
+
+
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.5.0/dist/semantic.min.js"></script>
+<script src="src/js/script.js"></script>
+
+
+<script>
+    //semantic UI
+    $('.ui.dropdown').dropdown();
+    $(document).ready(function () {
+        $('.ui.accordion').accordion();
+    });
+
+    <?php
+    //affichage des erreurs sur le formulaire
+    afficheErreurField("directeurs_field", $erreurDirecteurs);
+    afficheErreurField("annee_field", $erreurAnnee);
+    afficheErreurField("equipe_field", $erreurEquipe);
+
+
+    ?>
+
+
+</script>

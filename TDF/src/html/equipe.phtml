@@ -1,0 +1,52 @@
+<div class="ui segment parent">
+    <div class="gridHead">
+        <h1>Historique de l'équipe : <?= $tabHistoriqueEquipe[0]['NOM_EQUIPE']?></h1>
+    </div>
+
+    <div class="gridBody">
+        <div class="ui styled accordion">
+
+            <?php
+            foreach ($tabHistoriqueEquipe as $value) { ?>
+                <div class="active title">
+                    <i class="dropdown icon"></i>
+                    <?= $value['ANNEE']." " . $value['NOM_EQUIPE'] ?>
+                </div>
+                <div class="content">
+                    <p class="transition hidden">
+                        Directeur principal : <?= $value['NOM_DIRECTEUR_PRE'] . " " . $value['PRENOM_DIRECTEUR_PRE'] ?>
+                        <br>Directeur secondaire : <?= $value['NOM_DIRECTEUR_SEC'] . " " . $value['PRENOM_DIRECTEUR_SEC'] ?>
+                    </p>
+                    <?php
+                    $sql = "select n_coureur, coureur.nom as nom_coureur, coureur.prenom as prenom_coureur, n_dossard from tdf_coureur coureur
+                  join tdf_parti_coureur parti_coureur using(n_coureur)
+                  where n_equipe = ".$_GET['n_equipe']." and annee = ".$value['ANNEE'];
+                    LireDonneesPDO1($conn,$sql,$tabCoureurs);
+                    foreach ($tabCoureurs as $coureur) { ?>
+                        <div class="ui list">
+                            <div class="item">
+                                <i class="user icon"></i>
+                                <div class="content">
+                                    <div class="header"><a class="header" href="coureur.php?n_coureur=<?= $coureur['N_COUREUR'] ?>"><?= $coureur['NOM_COUREUR'] .' '. $coureur['PRENOM_COUREUR'] ?></a></div>
+                                    <div class="description"><?= 'Numéro de dossard : '. $coureur['N_DOSSARD'] ?></div>
+                                </div>
+                            </div>
+                        </div>
+                    <?php } ?>
+                </div>
+            <?php } ?>
+        </div>
+    </div>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.5.0/dist/semantic.min.js"></script>
+<script>
+
+    $('.ui.dropdown')
+        .dropdown()
+    ;
+    $(document).ready(function(){
+        $('.ui.accordion').accordion();
+    });
+</script>

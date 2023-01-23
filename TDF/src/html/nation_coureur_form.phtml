@@ -1,0 +1,51 @@
+<div class="gridHead">
+    <div class="ui raised padded segment">
+        <form class="ui form" action="" method="post">
+            <h4 class="ui dividing header">Modifier la nationalité</h4>
+            <div class="two fields">
+                <div class="field" id="date_debut_field">
+                    <label for="nom">Année début*</label>
+                    <input type="text" name="anneeDebut" id="anneeDebut"
+                           <?php if (isset($_POST['modifierNationalite'])) { echo 'placeholder="'.$nationaliteEnModif['ANNEE_DEBUT'].'" value="'.$nationaliteEnModif['ANNEE_DEBUT'].'"';} ?> oninput="changement(this)">
+                </div>
+            </div>
+            <?php if (count($erreursDateDebut)!==0){
+                afficheMessagesErreur($erreursDateDebut);
+            } ?>
+            <div class="field" id="nationalite_field">
+                <label for="menu">Nationalité*</label>
+                <div class="ui fluid search selection dropdown">
+                    <input type="hidden" name="nationalite" <?php if(isset($_POST['nationalite'])) echo "value=\"".$_POST['nationalite']."\""?> oninput="changement(this)">
+
+                    <i class="dropdown icon"></i>
+                    <div class="default text">Sélectionnez un pays ...</div>
+                    <div class="menu">
+                        <?php
+                        $tab = $conn->query("select NOM, CODE_CIO, lower(substr(CODE_ISO, 0, 2)) as CODE_ISO from TDF_NATION order by NOM")->fetchAll(PDO::FETCH_ASSOC);
+                        foreach ($tab as $pays) {
+                            ?>
+                            <div class="item" data-value="<?php echo $pays['CODE_CIO'];?>"><i class=" <?php echo $pays['CODE_ISO'] ?> flag"></i><?php echo $pays['NOM'];?></div>
+                        <?php } ?>
+                    </div>
+                </div>
+            </div>
+            <?php if (count($erreursNationalite)!==0){
+                afficheMessagesErreur($erreursNationalite);
+            } ?>
+            <button class="ui button" type="submit" name="retour" onclick="">Retour</button>
+            <?php if (isset($_POST['modifierNationalite'])){
+                echo '<button id="subButton" class="ui green positive button" type="submit" name="confirmModifNation" value="'.$nationaliteEnModif['NUMERO'].'">Confirmer</button>';
+            }else{
+                echo '<button id="subButton" class="ui green positive button" type="submit" name="insertionNationalite">Confirmer</button>';
+            } ?>
+            </form>
+    </div>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.5.0/dist/semantic.min.js"></script>
+<script>
+    $('.ui.dropdown')
+        .dropdown()
+    ;
+</script>

@@ -1,0 +1,131 @@
+<div class="ui segment parent">
+    <div class="gridHead">
+        <form action="" method="get">
+            <h1>Choisissez une année :</h1>
+            <select name="annee" class="ui dropdown">
+                <?php
+                AfficherOptions($tab);
+                ?>
+            </select>
+            <input class="ui button" type="submit">
+        </form>
+    </div>
+    <div class="gridleft">
+        <div class="ui vertical pointing menu">
+            <a class="item active" href="#">
+                Classement
+            </a>
+            <a class="item" href="#etapes">
+                Etapes
+            </a>
+            <a class="item" href="#equipes">
+                Equipes
+            </a>
+            <a class="item" href="#stats">
+                Statistiques
+            </a>
+        </div>
+    </div>
+    <div class="gridBody">
+        <div class="ui accordion">
+            <div class="active title">
+                <h2>Le classement en <?= $annee ?> :</h2>
+            </div>
+            <div class="active content">
+                <table class='ui celled table' border='1'>
+                    <thead>
+                    <tr>
+                        <th>RANG</th>
+                        <th>DOSSARD</th>
+                        <th>NOM</th>
+                        <th>PRENOM</th>
+                        <th>JEUNE</th>
+                        <th>NATIONALITÉ</th>
+                        <th>ÉQUIPE</th>
+                        <th>TEMPS</th>
+                    </tr>
+                    </thead>
+                    <?php foreach ($tabCla as $coureur) { ?>
+                        <tr onclick="window.location.href='coureur.php?n_coureur=<?= $coureur['N_COUREUR'] ?>'">
+                            <td><?= $coureur['RANG_ARRIVEE'] ?></td>
+                            <td><?= $coureur['DOSSARD'] ?></td>
+                            <td><?= $coureur['NOM'] ?></td>
+                            <td><?= $coureur['PRENOM'] ?></td>
+                            <td><?= $coureur['J'] ?></td>
+                            <td><?= $coureur['CODE_PAYS'] ?></td>
+                            <td><a href="equipe.php?n_equipe=<?= $coureur['N_EQUIPE'] ?>">
+                                    <?= $coureur['EQUIPE'] ?></a></td>
+
+                            <td><?= $coureur['HH_MM_SS'] ?></td>
+                        </tr>
+                    <?php } ?>
+                </table>
+            </div>
+
+
+            <div class="active title">
+                <h2 id="etapes"> Les Étapes du tour en <?= $annee ?> et leur gagnant :</h2>
+            </div>
+            <div class="active content">
+                <table class='ui celled table' border='1'>
+                    <thead>
+                    <tr>
+                        <th>NUMÉRO</th>
+                        <th>VILLE DÉPART</th>
+                        <th>VILLE ARRIVÉ</th>
+                        <th>DISTANCE</th>
+                        <th>TYPE D'ÉPREUVE</th>
+                        <th>GAGNANT</th>
+                    </tr>
+                    </thead>
+                    <?php AfficheClassement($tabEta); ?>
+                </table>
+            </div>
+            <div class="active title">
+                <h2 id="equipes"> Les joueurs et leur sponsor en <?= $annee ?> :</h2>
+            </div>
+            <div class="active content">
+                <table class='ui celled table' border='1'>
+                    <thead>
+                    <tr>
+                        <th>NOM</th>
+                        <th>PRENOM</th>
+                        <th>SPONSOR</th>
+                        <th>JEUNE</th>
+                    </tr>
+                    </thead>
+                    <?php AfficheClassement($tabSpon); ?>
+                </table>
+            </div>
+
+            <h2 id="stats"> Statistiques
+            </h2>
+            <?php
+            include 'src/php/stats/jeuneStats.php';
+            include 'src/php/stats/nouveauStats.php';
+            include 'src/php/stats/nationStat.php';
+            ?>
+
+
+        </div>
+    </div>
+
+
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.5.0/dist/semantic.min.js"></script>
+<script>
+    $('.ui.dropdown').dropdown();
+    $('.ui .item').on('click', function () {
+        $('.ui .item').removeClass('active');
+        $(this).addClass('active');
+    });
+    $('.ui.accordion')
+        .accordion()
+    ;
+
+
+</script>
+</body>
+</html>

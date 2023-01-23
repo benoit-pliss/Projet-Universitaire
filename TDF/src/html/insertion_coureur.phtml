@@ -1,0 +1,154 @@
+<div class="ui segment parent">
+    <div class="gridHead">
+        <button class="ui button" onclick="window.location.href='coureurs.php'"><i class="arrow left icon"></i>Retour
+        </button>
+        <div class="ui raised padded segment">
+
+            <form class="ui form <?php if (!$erreur) echo ' error'; ?>" action="" method="post">
+                <!-- class error will show error message-->
+                <h4 class="ui dividing header">Insertion d'un coureur</h4>
+
+                <?php
+                if ($erreurDoublon != "") {
+                    echo '<div class="ui error message">
+                            <div class="header">Erreur</div>
+                            <p>' . $erreurDoublon . '</p>
+                        </div>';
+                }
+                ?>
+
+                <div class="two fields">
+
+                    <div class="field" id="nom_field">
+                        <label for="nom">Nom*</label>
+                        <input type="text" name="nom" id="nom" value="<?php verifierText("nom"); ?>"
+                               oninput="changement(this)">
+                    </div>
+
+                    <div class="field" id="prenom_field">
+                        <label for="prenom">Prénom*</label>
+                        <input type="text" name="prenom" id="prenom" value="<?php verifierText("prenom"); ?>"
+                               oninput="changement(this)">
+                    </div>
+                </div>
+
+
+                <div class="field" id="nationalite_field">
+                    <label for="menu">Nationalité*</label>
+                    <div class="ui fluid search selection dropdown">
+                        <input type="hidden"
+                               name="nationalite" <?php if (isset($_POST['nationalite'])) echo "value=\"" . $_POST['nationalite'] . "\"" ?>
+                               oninput="changement(this)">
+                        <i class="dropdown icon"></i>
+                        <div class="default text">Sélectionnez un pays ...</div>
+                        <div class="menu">
+                            <?php
+                            $tab = $conn->query("select NOM, CODE_CIO, lower(substr(CODE_ISO, 0, 2)) as CODE_ISO from TDF_NATION order by NOM")->fetchAll(PDO::FETCH_ASSOC);
+                            foreach ($tab as $pays) {
+                                ?>
+                                <div class="item" data-value="<?php echo $pays['CODE_CIO']; ?>"><i
+                                            class=" <?php echo $pays['CODE_ISO'] ?> flag"></i><?php echo $pays['NOM']; ?>
+                                </div>
+                            <?php } ?>
+                        </div>
+                    </div>
+                </div>
+                <div class="two fields">
+
+                    <div id="annee_naiss_field" class="field">
+                        <label>Année de naissance</label>
+
+                        <input id="annee_naiss" type="text" name="annee_naiss" placeholder="1973"
+                               value="<?php verifierText("annee_naiss"); ?>" oninput="changement(this)">
+                    </div>
+                    <div id="annee_prem_field" class="field">
+                        <label>Année du premier Tour de France</label>
+                        <input id="annee_prem" type="text" name="annee_prem" placeholder="1998"
+                               value="<?php verifierText("annee_prem"); ?>" oninput="changement(this)">
+                    </div>
+                </div>
+                <?php
+                if (isset($_POST['subButton']) && $_POST['subButton'] == 'Envoyer' && !$erreur) {
+                    echo '<button id="subButton" class="ui positive button" type="submit" name="subButton" value="Confirmer">Veuillez Confirmer l\'insertion</button>';
+                } else {
+                    echo '<button id="subButton" class="ui button" type="submit" name="subButton" value="Envoyer">Insérer le coureur</button>';
+                }
+                ?>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.5.0/dist/semantic.min.js"></script>
+<script>
+
+</script>
+<script>
+    //semantic UI
+    $('.ui.dropdown')
+        .dropdown()
+    ;
+
+    //js funtion
+
+
+    function erreurDoublon() {
+        document.getElementById("nom_field").classList.add("error");
+        document.getElementById("prenom_field").classList.add("error");
+    }
+
+    <?php
+
+    if ($erreurDoublon != "") {
+        echo 'erreurDoublon();';
+    }
+    if (count($erreurNom) != 0) {
+        echo 'addArrayErrorMessage("nom_field", ' . json_encode($erreurNom) . ');';
+    }
+    if (count($erreurPrenom) != 0) {
+        echo 'addArrayErrorMessage("prenom_field", ' . json_encode($erreurPrenom) . ');';
+    }
+    if (count($erreurNationalite) != 0) {
+        echo 'addArrayErrorMessage("nationalite_field", ' . json_encode($erreurNationalite) . ');';
+    }
+
+    if (count($erreurAnnee_naiss) != 0) {
+        echo 'addArrayErrorMessage("annee_naiss_field", ' . json_encode($erreurAnnee_naiss) . ');';
+    }
+
+    if (count($erreurAnnee_prem) != 0) {
+        echo 'addArrayErrorMessage("annee_prem_field", ' . json_encode($erreurAnnee_prem) . ');';
+    }
+
+
+    ?>
+
+    function addArrayErrorMessage(id, message) {
+        //Passage du bloc en erreur
+        document.getElementById(id).classList.add("error");
+
+        //Ajoute du message d'erreur
+        var errMessage = document.createElement("div");
+        errMessage.classList.add("ui");
+        errMessage.classList.add("error");
+        errMessage.classList.add("message");
+        errMessage.innerHTML = '<ul class="list">';
+        for (var i = 0; i < message.length; i++) {
+            errMessage.innerHTML += '<li>' + message[i] + '</li>';
+        }
+        errMessage.innerHTML += '</ul>';
+        document.getElementById(id).appendChild(errMessage);
+    }
+
+    function changement(evt) {
+        subButton = document.getElementById("subButton");
+        subButton.value = "Envoyer";
+        subButton.innerHTML = "Insérer le coureur";
+        subButton.classList.remove("positive");
+        evt.parentElement.classList.remove("error");
+    }
+</script>

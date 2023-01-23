@@ -1,0 +1,57 @@
+<?php
+
+$query = $conn->prepare("select * from (select TC.NOM, TC.PRENOM, N_COUREUR, count(N_COUREUR) as NB_VIC
+               from TDF_CLASSEMENTS_GENERAUX
+                        join TDF_COUREUR TC using (n_coureur)
+               where RANG_ARRIVEE = 1
+               group by N_COUREUR,TC.NOM, TC.PRENOM
+               order by NB_VIC desc)
+where ROWNUM <= 5");
+
+if (isset($_POST['annee'])){
+    $annee = $_POST['annee'];
+} else {
+    $annee = date("Y");
+}
+;
+$query->execute();
+$tabVainqueur = $query->fetchAll(PDO::FETCH_ASSOC);
+
+
+?>
+
+
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script type="text/javascript">
+    google.charts.load("current", {packages:['corechart']});
+    google.charts.setOnLoadCallback(drawChart);
+    function drawChart() {
+        var data = google.visualization.arrayToDataTable([
+            ["Element", "Density", { role: "style" } ],
+            <?php
+            foreach ($tabVainqueur as $row){
+                echo "['".$row["NOM"].$row["PRENOM"]."', ".$row["NB_VIC"].", 'blue'],";
+            }
+            ?>
+        ]);
+
+        var view = new google.visualization.DataView(data);
+        view.setColumns([0, 1,
+            { calc: "stringify",
+                sourceColumn: 1,
+                type: "string",
+                role: "annotation" },
+            2]);
+
+        var options = {
+            title: "Les plus grands Vainqueur",
+            width: 600,
+            height: 400,
+            bar: {groupWidth: "95%"},
+            legend: { position: "none" },
+        };
+        var chart = new google.visualization.ColumnChart(document.getElementById("columnchart_values"));
+        chart.draw(view, options);
+    }
+</script>
+<div id="columnchart_values" style="width: 900px; height: 300px;"></div>

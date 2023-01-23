@@ -1,0 +1,134 @@
+<div class="ui segment parent">
+    <div class="gridHead">
+        <div class="gridBody ui raised padded segment">
+            <form class="ui form <?php if ($erreur) echo ' error';?>" action="" method="post"> <!-- class error will show error message-->
+                <h4 class="ui dividing header">Création d'une équipe</h4>
+                <div class="field" id="equipe_field">
+                    <div class="ui checkbox" >
+                        <input id="new_equipe" type="checkbox" name="new_equipe" onchange="check(this)" <?php if(isset($_POST['new_equipe'])) echo "checked";?>>
+                        <label for="new_equipe">Nouvelle Equipe ?</label>
+                    </div>
+
+                    <div class="field" id="ancienne_equipe_field">
+                        <label for="menu">Equipes existantes*</label>
+                        <div class="ui fluid search selection dropdown">
+                            <input type="hidden" id="ancienne_equipe" name="ancienne_equipe" <?php if(isset($_POST['ancienne_equipe'])) echo "value=\"".$_POST['ancienne_equipe']."\""?> oninput="changement(this)">
+                            <i class="dropdown icon"></i>
+                            <div class="default text">Sélectionnez une équipe ...</div>
+                            <div class="menu">
+                                <?php
+                                $res = $conn->query("select TE.N_EQUIPE as N_EQUIPE, TS.NOM as NOM_EQUIPE, lower(substr(CODE_ISO, 0, 2)) as CODE_ISO from TDF_EQUIPE TE
+                                                                join TDF_SPONSOR TS on TE.N_EQUIPE = TS.N_EQUIPE
+                                                                join TDF_NATION TN on TS.CODE_CIO = TN.CODE_CIO
+                                                                where TE.ANNEE_DISPARITION is null
+    
+                                                                and ANNEE_SPONSOR =
+                                                                      (
+                                                                            select max(ANNEE_SPONSOR) from TDF_SPONSOR TS2
+                                                                            where TS2.N_EQUIPE = TE.N_EQUIPE
+                                                                        )
+                                                                order by TS.NOM")->fetchAll(PDO::FETCH_ASSOC);
+                                foreach ($res as $equipe) {
+                                    ?>
+                                    <div class="item" data-value="<?php echo $equipe['N_EQUIPE'];?>"><i class=" <?php echo $equipe['CODE_ISO'] ?> flag"></i><?php echo $equipe['NOM_EQUIPE'];?></div>
+                                <?php } ?>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div id="creation_new_equipe">
+                        <div class="two fields disabled" id="field_creation">
+                            <div class="field" id="creat_field">
+                                <label for="creation">Année de création*</label>
+                                <input type="text" name="creation" id="creation" value="<?php verifierText("creation"); ?>" oninput="changement(this)">
+                            </div>
+
+                            <div class="field" id="disp_field">
+                                <label for="disparition">Année de disparition</label>
+                                <input type="text" name="disparition" id="disparition" value="<?php verifierText("disparition"); ?>" oninput="changement(this)">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+
+                <h4 class="ui dividing header">Création d'un sponsor</h4>
+                <div class="field" id="sponsor_field">
+                    <label for="nom_sponsor">Nom*</label>
+                    <input type="text" name="nom_sponsor" id="nom_sponsor" value="<?php verifierText("nom_sponsor"); ?>">
+
+                    <label for="nom_code_spo">Nom abrégé*</label>
+                    <input type="text" name="nom_code_spo" id="nom_code_spo" value="<?php verifierText("nom_code_spo"); ?>">
+
+                    <div class="field" id="cio_sponsor_field">
+                        <label for="menu">Nationalité*</label>
+                        <div class="ui fluid search selection dropdown">
+                            <input type="hidden" name="cio_sponsor" <?php if(isset($_POST['cio_sponsor'])) echo "value=\"".$_POST['cio_sponsor']."\""?> oninput="changement(this)">
+                            <i class="dropdown icon"></i>
+                            <div class="default text">Sélectionnez un pays ...</div>
+                            <div class="menu">
+                                <?php
+                                $tab = $conn->query("select NOM, CODE_CIO, lower(substr(CODE_ISO, 0, 2)) as CODE_ISO from TDF_NATION order by NOM")->fetchAll(PDO::FETCH_ASSOC);
+                                foreach ($tab as $pays) {
+                                    ?>
+                                    <div class="item" data-value="<?php echo $pays['CODE_CIO'];?>"><i class=" <?php echo $pays['CODE_ISO'] ?> flag"></i><?php echo $pays['NOM'];?></div>
+                                <?php } ?>
+                            </div>
+                        </div>
+                    </div>
+
+                    <label for="annee_sponsor">Année de début de sponsor</label>
+                    <input type="text" name="annee_sponsor" id="annee_sponsor" value="<?php verifierText("annee_sponsor"); ?>" placeholder="Si vide alors l'année actuelle sera prise en compte">
+
+                </div>
+
+
+
+                <?php if (!$erreur && isset($_POST['subButton'])) : ?>
+                    <input class="ui button green" type="submit" name="subButton" value="Confirmer">
+                <?php else: ?>
+                    <input class="ui button" type="submit" name="subButton" value="Envoyer">
+                <?php endif; ?>
+            </form>
+            </div>
+
+        </div>
+
+
+
+    </div>
+</div>
+
+
+
+</body>
+
+</html>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.5.0/dist/semantic.min.js"></script>
+<script src="src/js/script.js"></script>
+<script>
+    $('.ui.dropdown')
+        .dropdown();
+
+    function check(el){
+        if(el.checked) {
+            document.getElementById("ancienne_equipe_field").classList.add("disabled");
+            document.getElementById("field_creation").classList.remove("disabled");
+        }
+        else {
+            document.getElementById("ancienne_equipe_field").classList.remove("disabled");
+            document.getElementById("field_creation").classList.add("disabled");
+        }
+    }
+
+    check(document.getElementById("new_equipe"));
+
+    <?php
+        afficheErreurField("equipe_field", $erreurEquipe);
+        afficheErreurField("sponsor_field", $erreurSponsor);
+    ?>
+
+</script>

@@ -1,0 +1,133 @@
+<div class="gridHead">
+    <?php
+    if (isset($erreur)){
+        if ($erreur == true){
+            if (isset($erreurNom)){
+                if (!empty($erreurNom)){
+                    ?>
+                    <div class="ui icon message">
+                        <i class="inbox icon"></i>
+                        <div class="content">
+                            <div class="header">
+                                <?= $erreurNom ?>
+                            </div>
+                        </div>
+                    </div>
+                    <?php
+                }
+            }
+        }
+
+        if (isset($erreurPrenom)){
+            if (!empty($erreurPrenom)){
+                ?>
+                <div class="ui icon message">
+                    <i class="inbox icon"></i>
+                    <div class="content">
+                        <div class="header">
+                            <?= $erreurPrenom ?>
+                        </div>
+                    </div>
+                </div>
+                <?php
+            }
+        }
+
+
+        if (isset($erreurAnnee_naiss)){
+            if (!empty($erreurAnnee_naiss)){
+                ?>
+                <div class="ui icon message">
+                    <i class="inbox icon"></i>
+                    <div class="content">
+                        <div class="header">
+                            <?= $erreurAnnee_naiss[0] ?>
+                        </div>
+                    </div>
+                </div>
+                <?php
+            }
+        }
+
+        if (isset($erreurAnnee_prem)){
+            if (!empty($erreurAnnee_prem)){
+                ?>
+                <div class="ui icon message">
+                    <i class="inbox icon"></i>
+                    <div class="content">
+                        <div class="header">
+                            <?= $erreurAnnee_prem ?>
+                        </div>
+                    </div>
+                </div>
+                <?php
+            }
+        }
+
+        if (isset($erreurDoublon)){
+            if (!empty($erreurDoublon)){
+                ?>
+                <div class="ui icon message">
+                    <i class="inbox icon"></i>
+                    <div class="content">
+                        <div class="header">
+                            <?= $erreurDoublon ?>
+                        </div>
+                    </div>
+                </div>
+                <?php
+            }
+        }
+
+    }
+    ?>
+    <div class="ui raised padded segment">
+        <form class="ui form" action="" method="post">
+            <div class="field">
+                <label>Nom et Prenom</label>
+                <div class="two fields">
+                    <div class="field">
+                        <input type="text" name="modifNom" value="<?php echo $rescoureur['NOM'] ?>" placeholder="Nom" >
+                    </div>
+
+                    <div class="field">
+                        <input type="text" name="modifPrenom" value="<?php echo $rescoureur['PRENOM'] ?>" placeholder="Prénom" >
+                    </div>
+                </div>
+            </div>
+
+            <div class="field">
+                <label>Année de Naissance</label>
+                <div class="field">
+                    <input type="number" name="modifAnneeNaiss" value="<?php echo $rescoureur['ANNEE_NAISSANCE'] ?>" placeholder="Année de Naissance">
+                </div>
+            </div>
+
+
+            <div class="field">
+                <label>Année de Première Participation</label>
+                <div class="field">
+                    <div class="field">
+                        <input type="number" name="modifAnneePrem" value="<?= $rescoureur['ANNEE_PREM'] ?>" placeholder="Année de Première Participation">
+                    </div>
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="field">
+                    <button class="ui button" type="submit" name="retour" onclick="">Retour</button>
+                    <button id="subButton" class="ui green positive button" type="submit" name="valid_modif">Confirmer</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.5.0/dist/semantic.min.js"></script>
+<script>
+    $('.ui.dropdown')
+        .dropdown()
+    ;
+</script>
+
